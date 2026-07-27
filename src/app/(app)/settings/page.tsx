@@ -21,12 +21,14 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" />Profile</TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-2"><Palette className="h-4 w-4" />Appearance</TabsTrigger>
-          <TabsTrigger value="shortcuts" className="gap-2"><Keyboard className="h-4 w-4" />Shortcuts</TabsTrigger>
-          <TabsTrigger value="data" className="gap-2"><Database className="h-4 w-4" />Data</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="w-full min-w-[380px] md:min-w-0">
+            <TabsTrigger value="profile" className="gap-1 sm:gap-2 text-xs sm:text-sm"><User className="h-3 w-3 sm:h-4 sm:w-4" />Profile</TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Palette className="h-3 w-3 sm:h-4 sm:w-4" />Appearance</TabsTrigger>
+            <TabsTrigger value="shortcuts" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Keyboard className="h-3 w-3 sm:h-4 sm:w-4" />Shortcuts</TabsTrigger>
+            <TabsTrigger value="data" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Database className="h-3 w-3 sm:h-4 sm:w-4" />Data</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="profile" className="space-y-4">
           <Card>
@@ -47,14 +49,14 @@ export default function SettingsPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Theme</CardTitle></CardHeader>
             <CardContent>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 {[
                   { id: "dark" as const, label: "Dark", icon: Moon },
                   { id: "light" as const, label: "Light", icon: Sun },
                   { id: "system" as const, label: "System", icon: Monitor },
                 ].map((t) => (
                   <button key={t.id} onClick={() => setTheme(t.id)}
-                    className={`flex flex-col items-center gap-2 p-6 rounded-xl border transition-all ${
+                    className={`flex items-center sm:flex-col items-center gap-3 sm:gap-2 sm:p-6 p-4 rounded-xl border transition-all ${
                       theme === t.id ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground"
                     }`}>
                     <t.icon className="h-6 w-6" />
@@ -74,12 +76,12 @@ export default function SettingsPage() {
                 { label: "Compact Mode", description: "Reduce spacing for more content", default: false },
                 { label: "Focus Mode", description: "Hide distractions during work", default: false },
               ].map((pref) => (
-                <div key={pref.label} className="flex items-center justify-between p-3 rounded-lg border border-border">
-                  <div>
+                <div key={pref.label} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">{pref.label}</p>
                     <p className="text-xs text-muted-foreground">{pref.description}</p>
                   </div>
-                  <Switch defaultChecked={pref.default} />
+                  <Switch defaultChecked={pref.default} className="shrink-0" />
                 </div>
               ))}
             </CardContent>
@@ -100,9 +102,9 @@ export default function SettingsPage() {
                 { keys: "Esc", action: "Close Dialog/Modal" },
                 { keys: "?", action: "Show Shortcuts" },
               ].map((shortcut) => (
-                <div key={shortcut.action} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
-                  <span className="text-sm">{shortcut.action}</span>
-                  <kbd className="pointer-events-none inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                <div key={shortcut.action} className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-accent">
+                  <span className="text-sm truncate">{shortcut.action}</span>
+                  <kbd className="pointer-events-none inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-1 text-xs font-medium text-muted-foreground shrink-0">
                     {shortcut.keys}
                   </kbd>
                 </div>

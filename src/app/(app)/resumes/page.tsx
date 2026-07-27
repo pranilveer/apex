@@ -89,39 +89,37 @@ export default function ResumesPage() {
       </div>
 
       <Tabs defaultValue="resumes" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="resumes">Resumes ({resumes.length})</TabsTrigger>
-          <TabsTrigger value="applications">Applied Companies ({applications.length})</TabsTrigger>
+        <TabsList className="w-full">
+          <TabsTrigger value="resumes" className="flex-1 text-xs sm:text-sm">Resumes ({resumes.length})</TabsTrigger>
+          <TabsTrigger value="applications" className="flex-1 text-xs sm:text-sm">Applied ({applications.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumes" className="space-y-3">
           {resumes.map((resume, i) => (
             <motion.div key={resume.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Card className={`glass-hover ${resume.isDefault ? "border-primary/30" : ""}`}>
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{resume.name}</h3>
-                          <Badge variant="outline">{resume.version}</Badge>
-                          {resume.isDefault && <Badge variant="success">Default</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">Created: {resume.createdAt}</p>
-                        {resume.coverLetter && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{resume.coverLetter}</p>}
-                      </div>
+                <CardContent className="p-4 md:p-5 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <FileText className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      {!resume.isDefault && (
-                        <Button variant="ghost" size="sm" onClick={() => setDefault(resume.id)}>Set Default</Button>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4" /></Button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <h3 className="font-semibold truncate">{resume.name}</h3>
+                        <Badge variant="outline">{resume.version}</Badge>
+                        {resume.isDefault && <Badge variant="success">Default</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Created: {resume.createdAt}</p>
+                      {resume.coverLetter && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{resume.coverLetter}</p>}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2 pl-[52px]">
+                    {!resume.isDefault && (
+                      <Button variant="ghost" size="sm" onClick={() => setDefault(resume.id)} className="text-xs">Set Default</Button>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </CardContent>
               </Card>
@@ -133,16 +131,16 @@ export default function ResumesPage() {
           {applications.map((app, i) => (
             <motion.div key={app.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Card className="glass-hover">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">{app.company.slice(0, 2)}</div>
-                    <div>
+                <CardContent className="p-4 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">{app.company.slice(0, 2)}</div>
+                    <div className="min-w-0">
                       <p className="font-medium">{app.company}</p>
-                      <p className="text-xs text-muted-foreground">Resume: {app.resumeUsed}</p>
+                      <p className="text-xs text-muted-foreground truncate">Resume: {app.resumeUsed}</p>
                       <p className="text-xs text-muted-foreground">{app.date} · {app.notes}</p>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(app.result)}>{app.result}</Badge>
+                  <Badge className={`${getStatusColor(app.result)} shrink-0`}>{app.result}</Badge>
                 </CardContent>
               </Card>
             </motion.div>

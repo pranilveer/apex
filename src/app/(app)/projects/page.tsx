@@ -126,24 +126,26 @@ export default function ProjectsPage() {
           return (
             <motion.div key={project.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <Card className="glass-hover">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <FolderKanban className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold">{project.name}</h3>
-                        <p className="text-sm text-muted-foreground">{project.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className={statusColors[project.status] || ""}>{project.status}</Badge>
-                          {project.techStack.map((tech) => <Badge key={tech} variant="outline" className="text-xs">{tech}</Badge>)}
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <FolderKanban className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="text-base md:text-lg font-semibold truncate">{project.name}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {project.repoUrl && <a href={project.repoUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><Github className="h-4 w-4" /></Button></a>}
+                          {project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="h-4 w-4" /></Button></a>}
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {project.repoUrl && <a href={project.repoUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><Github className="h-4 w-4" /></Button></a>}
-                      {project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="h-4 w-4" /></Button></a>}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <Badge className={statusColors[project.status] || ""}>{project.status}</Badge>
+                        {project.techStack.map((tech) => <Badge key={tech} variant="outline" className="text-xs">{tech}</Badge>)}
+                      </div>
                     </div>
                   </div>
 
@@ -160,7 +162,7 @@ export default function ProjectsPage() {
                   )}
 
                   {totalTasks > 0 && (
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                       {[
                         { label: "To Do", tasks: todoTasks, color: "border-blue-400/30" },
                         { label: "In Progress", tasks: inProgressTasks, color: "border-yellow-400/30" },
