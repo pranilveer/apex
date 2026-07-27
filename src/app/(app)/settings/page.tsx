@@ -1,7 +1,6 @@
 "use client"
-import { useState } from "react"
-import { motion } from "framer-motion"
 import { Settings, User, Bell, Palette, Database, Download, Upload, Keyboard, Moon, Sun, Monitor } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function SettingsPage() {
-  const [theme, setTheme] = useState<"dark" | "light" | "system">("dark")
+  const { theme, setTheme } = useTheme()
 
   return (
     <div className="space-y-6">

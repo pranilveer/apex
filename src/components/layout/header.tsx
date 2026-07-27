@@ -1,6 +1,7 @@
 "use client"
 import { usePathname } from "next/navigation"
-import { Search, Command, Maximize2, Menu } from "lucide-react"
+import { Search, Command, Maximize2, Menu, Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/app-store"
 import { getGreeting } from "@/lib/utils"
@@ -27,6 +28,7 @@ const pageTitles: Record<string, string> = {
 export function Header() {
   const pathname = usePathname()
   const { setCommandOpen, toggleFocusMode, sidebarOpen, setSidebarOpen } = useAppStore()
+  const { theme, setTheme } = useTheme()
   const title = pageTitles[pathname] || "Dashboard"
 
   return (
@@ -57,6 +59,16 @@ export function Header() {
           <kbd className="pointer-events-none hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
             <Command className="h-3 w-3" />K
           </kbd>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="h-9 w-9"
+          title="Toggle theme"
+        >
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
         <Button variant="ghost" size="icon" onClick={toggleFocusMode} className="h-9 w-9">
           <Maximize2 className="h-4 w-4" />
