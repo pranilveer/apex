@@ -1,4 +1,5 @@
 "use client"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   Dumbbell, Building2, Code2, Github, FolderKanban, Atom, Server,
@@ -62,6 +63,10 @@ export default function DashboardPage() {
   const completionPct = getCompletionPercentage()
   const completedCount = tasks.filter((t) => t.completed).length
   const totalTime = tasks.reduce((sum, t) => sum + t.timeSpent, 0)
+  const [dateStr, setDateStr] = useState("")
+  useEffect(() => {
+    setDateStr(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }))
+  }, [])
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -73,7 +78,7 @@ export default function DashboardPage() {
         <div>
           <h2 className="text-xl md:text-2xl font-bold">Today&apos;s Progress</h2>
           <p className="text-muted-foreground text-sm">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            {dateStr}
           </p>
         </div>
         <Badge variant="success" className="text-sm gap-1 px-3 py-1">

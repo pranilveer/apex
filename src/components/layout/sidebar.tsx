@@ -121,18 +121,21 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Desktop: sidebar always starts closed, toggle button */}
-      {!sidebarOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed left-4 top-4 z-40 hidden md:block"
-        >
-          <Button variant="glass" size="icon" onClick={toggleSidebar} className="h-10 w-10 shadow-lg">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </motion.div>
-      )}
+      {/* Desktop toggle button — only shows when sidebar is closed */}
+      <AnimatePresence>
+        {!sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed left-4 top-4 z-50 hidden md:block"
+          >
+            <Button variant="glass" size="icon" onClick={toggleSidebar} className="h-10 w-10 shadow-lg">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile backdrop */}
       <AnimatePresence>
@@ -156,7 +159,7 @@ export function Sidebar() {
             animate={{ x: 0 }}
             exit={{ x: -256 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="fixed left-0 top-0 z-40 h-screen w-[256px] border-r border-border bg-sidebar md:hidden"
+            className="fixed left-0 top-0 z-50 h-screen w-[256px] border-r border-border bg-sidebar md:hidden"
           >
             <div className="absolute right-2 top-3">
               <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="h-8 w-8">
@@ -168,25 +171,22 @@ export function Sidebar() {
         )}
       </AnimatePresence>
 
-      {/* Desktop: sidebar slide in/out */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 256, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="fixed left-0 top-0 z-40 h-screen w-[256px] border-r border-border bg-sidebar overflow-hidden max-md:hidden"
-          >
-            <div className="absolute right-2 top-3">
-              <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </div>
-            <SidebarContent />
-          </motion.aside>
+      {/* Desktop: always-mounted sidebar with width transition */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 hidden md:block h-screen border-r border-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-in-out",
+          sidebarOpen ? "w-[256px]" : "w-0"
         )}
-      </AnimatePresence>
+      >
+        <div className="absolute right-2 top-3 z-10">
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className={cn("w-[256px]", !sidebarOpen && "pointer-events-none")}>
+          <SidebarContent />
+        </div>
+      </aside>
     </>
   )
 }

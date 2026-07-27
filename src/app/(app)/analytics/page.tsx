@@ -19,11 +19,16 @@ const weeklyData = [
   { day: "Sun", study: 5, coding: 6, office: 0, gym: 1.5 },
 ]
 
+const seededRandom = (seed: number) => {
+  const x = Math.sin(seed + 1) * 10000
+  return x - Math.floor(x)
+}
+
 const monthlyData = Array.from({ length: 30 }, (_, i) => ({
   day: i + 1,
-  studyHours: Math.floor(Math.random() * 5) + 2,
-  codingHours: Math.floor(Math.random() * 6) + 3,
-  gymMinutes: Math.floor(Math.random() * 40) + 20,
+  studyHours: Math.floor(seededRandom(i * 3) * 5) + 2,
+  codingHours: Math.floor(seededRandom(i * 3 + 1) * 6) + 3,
+  gymMinutes: Math.floor(seededRandom(i * 3 + 2) * 40) + 20,
 }))
 
 const radarData = [
@@ -42,7 +47,7 @@ const heatmapData = Array.from({ length: 91 }, (_, i) => {
   d.setDate(d.getDate() - i)
   return {
     date: d.toISOString().split("T")[0],
-    count: Math.floor(Math.random() * 12),
+    count: Math.floor(seededRandom(i * 7 + 100) * 12),
   }
 })
 
@@ -263,7 +268,7 @@ export default function AnalyticsPage() {
                     <div key={i} className="text-center text-xs text-muted-foreground py-1">{d}</div>
                   ))}
                   {Array.from({ length: 28 }, (_, i) => {
-                    const active = Math.random() > 0.2
+                    const active = seededRandom(i * 11 + 200) > 0.2
                     return (
                       <div key={i} className={`h-8 w-full rounded-md flex items-center justify-center text-xs ${active ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}>
                         {active && <Flame className="h-3 w-3" />}
