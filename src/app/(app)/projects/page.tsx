@@ -92,7 +92,7 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Project Tracker</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Project Tracker</h2>
           <p className="text-muted-foreground text-sm">Manage your personal projects</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -115,7 +115,7 @@ export default function ProjectsPage() {
         </Dialog>
       </div>
 
-      <div className="space-y-6">
+<div className="space-y-4 md:space-y-6">
         {projects.map((project, i) => {
           const todoTasks = project.tasks.filter((t) => t.status === "todo")
           const inProgressTasks = project.tasks.filter((t) => t.status === "in-progress")

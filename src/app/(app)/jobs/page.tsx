@@ -71,10 +71,10 @@ export default function JobsPage() {
   const avgExpected = Math.round(jobs.reduce((sum, j) => sum + j.expectedSalary, 0) / jobs.length)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Job Switch Dashboard</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Job Switch Dashboard</h2>
           <p className="text-muted-foreground text-sm">Track your job applications and interview pipeline</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>

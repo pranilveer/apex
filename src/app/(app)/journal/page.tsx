@@ -64,10 +64,10 @@ export default function JournalPage() {
   const isToday = selectedDate === new Date().toISOString().split("T")[0]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Daily Journal</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Daily Journal</h2>
           <p className="text-muted-foreground text-sm">Reflect and plan your days</p>
         </div>
       </div>

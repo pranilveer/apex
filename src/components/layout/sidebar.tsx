@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutDashboard, Target, Code2, Github, FolderKanban, BookOpen,
   PenLine, CheckCircle2, Briefcase, FileText, Bookmark, BarChart3,
-  Bell, Trophy, Brain, Settings, ChevronLeft, ChevronRight, Zap, Menu
+  Bell, Trophy, Brain, Settings, ChevronLeft, ChevronRight, Zap
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/stores/app-store"
@@ -121,18 +121,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger button (always visible when sidebar is closed) */}
-      {!sidebarOpen && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="fixed left-3 top-3 z-50 h-10 w-10 shadow-lg md:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      )}
-
       {/* Desktop: sidebar always starts closed, toggle button */}
       {!sidebarOpen && (
         <motion.div

@@ -70,10 +70,10 @@ export default function InterviewPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Interview Preparation</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Interview Preparation</h2>
           <p className="text-muted-foreground text-sm">Master all topics for your dream company</p>
         </div>
         <Badge variant="info" className="text-sm px-3 py-1">Overall: {avgProgress}%</Badge>

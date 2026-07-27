@@ -11,7 +11,7 @@ export function PomodoroButton() {
       variant={pomodoroActive ? "default" : "ghost"}
       size="icon"
       onClick={() => setPomodoroActive(!pomodoroActive)}
-      className="fixed bottom-6 left-6 z-50 h-12 w-12 rounded-full shadow-lg"
+      className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-lg"
     >
       <Timer className="h-5 w-5" />
     </Button>

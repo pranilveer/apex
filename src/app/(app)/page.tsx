@@ -64,14 +64,14 @@ export default function DashboardPage() {
   const totalTime = tasks.reduce((sum, t) => sum + t.timeSpent, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
-          <h2 className="text-2xl font-bold">Today&apos;s Progress</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Today&apos;s Progress</h2>
           <p className="text-muted-foreground text-sm">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
           </p>

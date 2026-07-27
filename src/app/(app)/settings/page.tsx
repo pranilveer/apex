@@ -13,9 +13,9 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Settings</h2>
+        <h2 className="text-xl md:text-2xl font-bold">Settings</h2>
         <p className="text-muted-foreground text-sm">Customize your experience</p>
       </div>
 

@@ -32,8 +32,8 @@ export function Header() {
   const title = pageTitles[pathname] || "Dashboard"
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 backdrop-blur-xl px-4 md:px-6 md:h-16">
-      <div className="flex items-center gap-2 min-w-0">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 backdrop-blur-xl px-3 md:px-6 md:h-16">
+      <div className="flex items-center gap-3 min-w-0">
         <Button
           variant="ghost"
           size="icon"
@@ -43,7 +43,7 @@ export function Header() {
           <Menu className="h-5 w-5" />
         </Button>
         <div className="min-w-0">
-          <h1 className="text-lg font-semibold md:text-xl truncate">{title}</h1>
+          <h1 className="text-base font-semibold md:text-xl truncate">{title}</h1>
           <p className="text-xs text-muted-foreground hidden sm:block">{getGreeting()}</p>
         </div>
       </div>

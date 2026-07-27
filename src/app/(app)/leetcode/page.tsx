@@ -84,10 +84,10 @@ export default function LeetcodePage() {
   const deleteProblem = (id: string) => setProblems(problems.filter((p) => p.id !== id))
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">LeetCode Tracker</h2>
+          <h2 className="text-xl md:text-2xl font-bold">LeetCode Tracker</h2>
           <p className="text-muted-foreground text-sm">Track your problem solving journey</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>

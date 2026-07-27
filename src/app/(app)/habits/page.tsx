@@ -101,9 +101,9 @@ export default function HabitsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Habit Tracker</h2>
+        <h2 className="text-xl md:text-2xl font-bold">Habit Tracker</h2>
         <p className="text-muted-foreground text-sm">Build consistency, one day at a time</p>
       </div>
 

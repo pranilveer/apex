@@ -72,10 +72,10 @@ export default function ResourcesPage() {
   const handleDelete = (id: string) => setResources(resources.filter((r) => r.id !== id))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Resource Library</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Resource Library</h2>
           <p className="text-muted-foreground text-sm">Your curated collection of learning resources</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>

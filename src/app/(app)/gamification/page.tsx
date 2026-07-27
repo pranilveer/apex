@@ -46,9 +46,9 @@ export default function GamificationPage() {
   const xpProgress = (currentLevelXP / 100) * 100
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Gamification</h2>
+        <h2 className="text-xl md:text-2xl font-bold">Gamification</h2>
         <p className="text-muted-foreground text-sm">Track your progress and earn achievements</p>
       </div>
 

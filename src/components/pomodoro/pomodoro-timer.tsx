@@ -47,9 +47,9 @@ export function PomodoroTimer() {
         initial={{ opacity: 0, y: 50, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 50, scale: 0.9 }}
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-24 right-4 z-50 sm:bottom-6 sm:right-6"
       >
-        <Card className="glass border-border/50 shadow-2xl w-[280px]">
+        <Card className="glass border-border/50 shadow-2xl w-[calc(100vw-2rem)] max-w-[280px]">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
