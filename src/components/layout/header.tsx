@@ -1,7 +1,7 @@
 "use client"
 import { usePathname } from "next/navigation"
 import { Search, Command, Maximize2, Menu, Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/layout/providers"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/app-store"
 import { getGreeting } from "@/lib/utils"

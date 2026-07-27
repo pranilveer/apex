@@ -176,7 +176,7 @@ export function Sidebar() {
             animate={{ width: 256, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="fixed left-0 top-0 z-40 hidden h-screen w-[256px] border-r border-border bg-sidebar overflow-hidden md:block"
+            className="fixed left-0 top-0 z-40 h-screen w-[256px] border-r border-border bg-sidebar overflow-hidden max-md:hidden"
           >
             <div className="absolute right-2 top-3">
               <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">

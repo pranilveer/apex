@@ -1,6 +1,6 @@
 "use client"
 import { Settings, User, Bell, Palette, Database, Download, Upload, Keyboard, Moon, Sun, Monitor } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/layout/providers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
