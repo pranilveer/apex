@@ -20,7 +20,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  sidebarOpen: false,
+  sidebarOpen: true,
   commandOpen: false,
   focusMode: false,
   pomodoroActive: false,
