@@ -78,7 +78,7 @@ export default function GitHubPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">GitHub Tracker</h2>
           <p className="text-muted-foreground text-sm">Track your contribution activity</p>
@@ -100,7 +100,7 @@ export default function GitHubPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card className="glass-hover"><CardContent className="p-4"><div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center"><GitCommit className="h-5 w-5 text-purple-400" /></div><div><p className="text-2xl font-bold">{totalCommits}</p><p className="text-xs text-muted-foreground">Total Commits</p></div></div></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4"><div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-green-400/10 flex items-center justify-center"><TrendingUp className="h-5 w-5 text-green-400" /></div><div><p className="text-2xl font-bold">{weekCommits}</p><p className="text-xs text-muted-foreground">This Week</p></div></div></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4"><div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-blue-400/10 flex items-center justify-center"><Github className="h-5 w-5 text-blue-400" /></div><div><p className="text-2xl font-bold">{uniqueRepos}</p><p className="text-xs text-muted-foreground">Repositories</p></div></div></CardContent></Card>

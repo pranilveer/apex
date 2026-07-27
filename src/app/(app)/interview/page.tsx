@@ -71,7 +71,7 @@ export default function InterviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Interview Preparation</h2>
           <p className="text-muted-foreground text-sm">Master all topics for your dream company</p>
@@ -89,7 +89,7 @@ export default function InterviewPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {topics.map((topic, i) => (
           <motion.div key={topic.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
             <Card className={`glass-hover cursor-pointer border ${colorMap[topic.color]} transition-all`} onClick={() => setSelectedTopic(topic)}>

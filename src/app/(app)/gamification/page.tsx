@@ -52,7 +52,7 @@ export default function GamificationPage() {
         <p className="text-muted-foreground text-sm">Track your progress and earn achievements</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
           <Card className="glass-hover overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent" />
@@ -128,7 +128,7 @@ export default function GamificationPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
             {badges.map((badge, i) => (
               <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
                 <div className={cn("flex flex-col items-center p-4 rounded-xl border transition-all text-center",
@@ -149,7 +149,7 @@ export default function GamificationPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="text-base">Weekly Rank</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -177,7 +177,7 @@ export default function GamificationPage() {
               <p className="text-4xl font-bold">{currentStreak}</p>
               <p className="text-sm text-muted-foreground">Day Streak</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="text-center p-4 rounded-lg border border-border">
                 <p className="text-2xl font-bold text-yellow-400">{longestStreak}</p>
                 <p className="text-xs text-muted-foreground">Longest Streak</p>

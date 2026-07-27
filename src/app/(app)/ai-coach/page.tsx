@@ -127,7 +127,7 @@ export default function AICoachPage() {
         <p className="text-muted-foreground text-sm">Your personal AI-powered productivity assistant</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {prompts.map((p, i) => (
           <motion.div key={p.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <Card className="glass-hover cursor-pointer" onClick={() => setInput(p.prompt)}>
@@ -140,7 +140,7 @@ export default function AICoachPage() {
         ))}
       </div>
 
-      <Card className="h-[500px] flex flex-col">
+      <Card className="h-[400px] md:h-[500px] flex flex-col">
         <CardHeader className="border-b border-border shrink-0">
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />

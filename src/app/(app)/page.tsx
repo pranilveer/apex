@@ -68,7 +68,7 @@ export default function DashboardPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
           <h2 className="text-2xl font-bold">Today&apos;s Progress</h2>
@@ -82,7 +82,7 @@ export default function DashboardPage() {
         </Badge>
       </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="glass-hover">
             <CardContent className="p-4">
@@ -160,7 +160,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <motion.div variants={container} initial="hidden" animate="show" className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <motion.div variants={container} initial="hidden" animate="show" className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {tasks.map((task) => {
           const Icon = taskIcons[task.id] || CheckCircle2
           const color = taskColors[task.id] || "text-zinc-400"
@@ -204,7 +204,7 @@ export default function DashboardPage() {
         })}
       </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <Link href="/goals">
           <Card className="glass-hover cursor-pointer">
             <CardContent className="p-4 flex items-center gap-3">

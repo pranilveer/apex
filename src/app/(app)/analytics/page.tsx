@@ -83,7 +83,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Analytics</h2>
           <p className="text-muted-foreground text-sm">Insights into your productivity and progress</p>
@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         {[
           { label: "Study Hours", value: `${totalStudy}h`, icon: Brain, color: "text-cyan-400", bg: "bg-cyan-400/10" },
           { label: "Coding Hours", value: `${totalCoding}h`, icon: Code2, color: "text-purple-400", bg: "bg-purple-400/10" },
@@ -126,7 +126,7 @@ export default function AnalyticsPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="text-base">Weekly Productivity</CardTitle></CardHeader>
               <CardContent>
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
             </Card>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="text-base">Time Distribution</CardTitle></CardHeader>
               <CardContent className="flex items-center justify-center">
@@ -237,7 +237,7 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="streaks">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="text-base">Weekly Productivity Score</CardTitle></CardHeader>
               <CardContent>

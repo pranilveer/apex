@@ -98,7 +98,7 @@ export default function LeetcodePage() {
             <DialogHeader><DialogTitle>Add Problem</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div><Label>Problem Name</Label><Input value={newProblem.name} onChange={(e) => setNewProblem({ ...newProblem, name: e.target.value })} placeholder="Two Sum" /></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Difficulty</Label>
                   <select className="flex h-10 w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm" value={newProblem.difficulty} onChange={(e) => setNewProblem({ ...newProblem, difficulty: e.target.value as "Easy" | "Medium" | "Hard" })}>
                     <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
@@ -106,7 +106,7 @@ export default function LeetcodePage() {
                 </div>
                 <div><Label>Topic</Label><Input value={newProblem.topic} onChange={(e) => setNewProblem({ ...newProblem, topic: e.target.value })} placeholder="Arrays" /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Pattern</Label><Input value={newProblem.pattern} onChange={(e) => setNewProblem({ ...newProblem, pattern: e.target.value })} placeholder="Two Pointer" /></div>
                 <div><Label>Time (min)</Label><Input type="number" value={newProblem.timeTaken || ""} onChange={(e) => setNewProblem({ ...newProblem, timeTaken: Number(e.target.value) })} /></div>
               </div>
@@ -118,7 +118,7 @@ export default function LeetcodePage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold">{problems.length}</p><p className="text-xs text-muted-foreground">Total Solved</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{easy}</p><p className="text-xs text-muted-foreground">Easy</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-yellow-400">{medium}</p><p className="text-xs text-muted-foreground">Medium</p></CardContent></Card>
@@ -141,7 +141,7 @@ export default function LeetcodePage() {
               <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                 <Card className="glass-hover">
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex items-center gap-4">
                         <Badge className={getDifficultyColor(p.difficulty)}>{p.difficulty}</Badge>
                         <div>
@@ -189,7 +189,7 @@ export default function LeetcodePage() {
         </TabsContent>
 
         <TabsContent value="topics" className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {topicStats.map((t) => (
               <Card key={t.topic} className="glass-hover">
                 <CardContent className="p-4">

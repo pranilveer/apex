@@ -73,7 +73,7 @@ export default function ResourcesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Resource Library</h2>
           <p className="text-muted-foreground text-sm">Your curated collection of learning resources</p>
@@ -87,7 +87,7 @@ export default function ResourcesPage() {
             <div className="space-y-4">
               <div><Label>Title</Label><Input value={newResource.title} onChange={(e) => setNewResource({ ...newResource, title: e.target.value })} /></div>
               <div><Label>URL</Label><Input value={newResource.url} onChange={(e) => setNewResource({ ...newResource, url: e.target.value })} placeholder="https://..." /></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Type</Label>
                   <select className="flex h-10 w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm" value={newResource.type} onChange={(e) => setNewResource({ ...newResource, type: e.target.value })}>
                     <option value="article">Article</option><option value="video">Video</option><option value="course">Course</option><option value="book">Book</option><option value="link">Link</option>
@@ -114,7 +114,7 @@ export default function ResourcesPage() {
         ))}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         {filtered.map((r, i) => {
           const Icon = typeIcons[r.type] || Link2
           return (

@@ -61,7 +61,7 @@ export default function ResumesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Resume Tracker</h2>
           <p className="text-muted-foreground text-sm">Manage your resumes and track where they&apos;re used</p>
@@ -82,7 +82,7 @@ export default function ResumesPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-primary">{resumes.length}</p><p className="text-xs text-muted-foreground">Total Resumes</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{applications.filter((a) => a.result === "offer").length}</p><p className="text-xs text-muted-foreground">Offers</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-blue-400">{applications.length}</p><p className="text-xs text-muted-foreground">Applications</p></CardContent></Card>

@@ -61,7 +61,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Notifications</h2>
           <p className="text-muted-foreground text-sm">Manage your reminders and notifications</p>
@@ -72,7 +72,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="text-base">Recent Notifications</CardTitle></CardHeader>
           <CardContent className="space-y-2">

@@ -55,7 +55,7 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Goals</h2>
           <p className="text-muted-foreground text-sm">Track your long-term objectives</p>
@@ -74,11 +74,11 @@ export default function GoalsPage() {
             <div className="space-y-4">
               <div><Label>Title</Label><Input value={newGoal.title} onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })} placeholder="e.g. Crack Google" /></div>
               <div><Label>Description</Label><Textarea value={newGoal.description} onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })} placeholder="Describe your goal..." /></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Target Date</Label><Input type="date" value={newGoal.targetDate} onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })} /></div>
                 <div><Label>Target Value</Label><Input type="number" value={newGoal.targetValue || ""} onChange={(e) => setNewGoal({ ...newGoal, targetValue: Number(e.target.value) })} placeholder="500" /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Unit</Label><Input value={newGoal.unit} onChange={(e) => setNewGoal({ ...newGoal, unit: e.target.value })} placeholder="problems, books..." /></div>
                 <div><Label>Priority</Label>
                   <select className="flex h-10 w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm" value={newGoal.priority} onChange={(e) => setNewGoal({ ...newGoal, priority: e.target.value })}>
@@ -94,7 +94,7 @@ export default function GoalsPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-primary">{goals.length}</p><p className="text-xs text-muted-foreground">Active Goals</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{goals.filter((g) => g.currentValue >= g.targetValue).length}</p><p className="text-xs text-muted-foreground">Completed</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-yellow-400">{goals.filter((g) => g.targetDate && getDaysLeft(g.targetDate) > 0).length}</p><p className="text-xs text-muted-foreground">In Progress</p></CardContent></Card>

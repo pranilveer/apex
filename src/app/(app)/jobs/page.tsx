@@ -72,7 +72,7 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Job Switch Dashboard</h2>
           <p className="text-muted-foreground text-sm">Track your job applications and interview pipeline</p>
@@ -94,7 +94,7 @@ export default function JobsPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {[
           { label: "Applied", count: counts.applied, icon: FileText, color: "text-blue-400" },
           { label: "OA", count: counts.oa, icon: Clock, color: "text-yellow-400" },
@@ -161,7 +161,7 @@ export default function JobsPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Wishlist Companies</CardTitle></CardHeader>
             <CardContent>
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {["Google", "Microsoft", "Amazon", "Atlassian", "Stripe", "Razorpay", "Flipkart", "Swiggy", "PhonePe"].map((c) => (
                   <div key={c} className="flex items-center justify-between p-3 rounded-lg border border-border">
                     <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export default function JobsPage() {
         </TabsContent>
 
         <TabsContent value="salary">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4" />Salary Calculator</CardTitle></CardHeader>
               <CardContent className="space-y-4">

@@ -65,7 +65,7 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Daily Journal</h2>
           <p className="text-muted-foreground text-sm">Reflect and plan your days</p>
@@ -84,7 +84,7 @@ export default function JournalPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <Card className="h-full">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Sun className="h-4 w-4 text-yellow-400" />Morning Goals</CardTitle></CardHeader>
@@ -134,7 +134,7 @@ export default function JournalPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Smile className="h-4 w-4 text-primary" />Mood</CardTitle></CardHeader>
           <CardContent>

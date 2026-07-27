@@ -32,7 +32,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Profile</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div><Label>Name</Label><Input defaultValue="Developer" className="mt-1" /></div>
                 <div><Label>Email</Label><Input defaultValue="dev@example.com" className="mt-1" /></div>
               </div>
@@ -115,7 +115,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Data Management</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                 <Card className="glass-hover cursor-pointer">
                   <CardContent className="p-4 flex items-center gap-3">
                     <Download className="h-5 w-5 text-primary" />

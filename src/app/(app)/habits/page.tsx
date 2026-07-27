@@ -107,7 +107,7 @@ export default function HabitsPage() {
         <p className="text-muted-foreground text-sm">Build consistency, one day at a time</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-primary">{todayPct}%</p><p className="text-xs text-muted-foreground">Today</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{todayCompleted}/{habits.length}</p><p className="text-xs text-muted-foreground">Completed</p></CardContent></Card>
         <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-orange-400 flex items-center justify-center gap-1"><Flame className="h-6 w-6" />{overallStreak}</p><p className="text-xs text-muted-foreground">Day Streak</p></CardContent></Card>
@@ -117,7 +117,7 @@ export default function HabitsPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Today&apos;s Habits</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {habits.map((habit, i) => {
               const done = !!todayData[habit.id]
               const streak = getStreak(habit.id)
@@ -156,7 +156,7 @@ export default function HabitsPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Monthly Heatmap</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-10 gap-1.5">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
             {getMonthGrid().map((d) => (
               <div key={d.date} className={cn("h-8 w-full rounded-md flex items-center justify-center text-[10px] text-muted-foreground heatmap-cell cursor-default", getHeatColor(d.completed, d.total))} title={`${d.date}: ${d.completed}/${d.total}`}>
                 {d.day}
@@ -180,7 +180,7 @@ export default function HabitsPage() {
               const maxStreak = 30
               return (
                 <div key={h.id} className="flex items-center gap-3">
-                  <span className="text-sm w-28 shrink-0">{h.label}</span>
+                  <span className="text-sm w-24 sm:w-28 shrink-0 truncate">{h.label}</span>
                   <Progress value={(streak / maxStreak) * 100} className="h-2 flex-1" />
                   <span className="text-sm text-muted-foreground w-16 text-right">{streak} days</span>
                 </div>
