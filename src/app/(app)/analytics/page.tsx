@@ -6,69 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, Radar, AreaChart, Area, PieChart, Pie, Cell } from "recharts"
 
-const weeklyData = [
-  { day: "Mon", study: 4, coding: 6, office: 8, gym: 1 },
-  { day: "Tue", study: 3, coding: 5, office: 8, gym: 1 },
-  { day: "Wed", study: 5, coding: 7, office: 8, gym: 1 },
-  { day: "Thu", study: 2, coding: 4, office: 8, gym: 1 },
-  { day: "Fri", study: 4, coding: 6, office: 8, gym: 1 },
-  { day: "Sat", study: 6, coding: 8, office: 0, gym: 1.5 },
-  { day: "Sun", study: 5, coding: 6, office: 0, gym: 1.5 },
-]
+const weeklyData: { day: string; study: number; coding: number; office: number; gym: number }[] = []
 
-const seededRandom = (seed: number) => {
-  const x = Math.sin(seed + 1) * 10000
-  return x - Math.floor(x)
-}
+const monthlyData: { day: number; studyHours: number; codingHours: number; gymMinutes: number }[] = []
 
-const monthlyData = Array.from({ length: 30 }, (_, i) => ({
-  day: i + 1,
-  studyHours: Math.floor(seededRandom(i * 3) * 5) + 2,
-  codingHours: Math.floor(seededRandom(i * 3 + 1) * 6) + 3,
-  gymMinutes: Math.floor(seededRandom(i * 3 + 2) * 40) + 20,
-}))
+const radarData: { skill: string; value: number }[] = []
 
-const radarData = [
-  { skill: "DSA", value: 65 },
-  { skill: "React", value: 80 },
-  { skill: "Node", value: 55 },
-  { skill: "System Design", value: 30 },
-  { skill: "JavaScript", value: 75 },
-  { skill: "DBMS", value: 50 },
-  { skill: "OS", value: 40 },
-  { skill: "Networks", value: 35 },
-]
+const heatmapData: { date: string; count: number }[] = []
 
-const heatmapData = Array.from({ length: 91 }, (_, i) => {
-  const d = new Date()
-  d.setDate(d.getDate() - i)
-  return {
-    date: d.toISOString().split("T")[0],
-    count: Math.floor(seededRandom(i * 7 + 100) * 12),
-  }
-})
+const productivityData: { week: string; productivity: number }[] = []
 
-const productivityData = [
-  { week: "W1", productivity: 72 },
-  { week: "W2", productivity: 85 },
-  { week: "W3", productivity: 68 },
-  { week: "W4", productivity: 91 },
-  { week: "W5", productivity: 78 },
-  { week: "W6", productivity: 88 },
-  { week: "W7", productivity: 82 },
-  { week: "W8", productivity: 95 },
-]
-
-const pieData = [
-  { name: "Coding", value: 35, color: "#8b5cf6" },
-  { name: "Study", value: 25, color: "#06b6d4" },
-  { name: "Office", value: 30, color: "#3b82f6" },
-  { name: "Gym", value: 5, color: "#22c55e" },
-  { name: "Reading", value: 5, color: "#eab308" },
-]
+const pieData: { name: string; value: number; color: string }[] = []
 
 const getHeatColor = (count: number) => {
   if (count === 0) return "bg-secondary"
@@ -268,7 +218,7 @@ export default function AnalyticsPage() {
                     <div key={i} className="text-center text-xs text-muted-foreground py-1">{d}</div>
                   ))}
                   {Array.from({ length: 28 }, (_, i) => {
-                    const active = seededRandom(i * 11 + 200) > 0.2
+                    const active = false
                     return (
                       <div key={i} className={`h-8 w-full rounded-md flex items-center justify-center text-xs ${active ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}>
                         {active && <Flame className="h-3 w-3" />}

@@ -19,26 +19,10 @@ interface CommitEntry {
   hoursSpent: number
 }
 
-const initialCommits: CommitEntry[] = [
-  { id: "1", date: "2026-07-27", repository: "daily-tracker", commitCount: 5, featureBuilt: "Dashboard UI", hoursSpent: 3 },
-  { id: "2", date: "2026-07-26", repository: "daily-tracker", commitCount: 8, featureBuilt: "LeetCode Tracker", hoursSpent: 4 },
-  { id: "3", date: "2026-07-25", repository: "portfolio-site", commitCount: 3, featureBuilt: "Blog Section", hoursSpent: 2 },
-  { id: "4", date: "2026-07-24", repository: "daily-tracker", commitCount: 12, featureBuilt: "Auth System", hoursSpent: 5 },
-  { id: "5", date: "2026-07-23", repository: "algo-practice", commitCount: 6, featureBuilt: "DP Solutions", hoursSpent: 3 },
-  { id: "6", date: "2026-07-22", repository: "portfolio-site", commitCount: 4, featureBuilt: "Responsive Design", hoursSpent: 2 },
-  { id: "7", date: "2026-07-21", repository: "daily-tracker", commitCount: 9, featureBuilt: "Database Schema", hoursSpent: 4 },
-]
+const initialCommits: CommitEntry[] = []
 
 const generateHeatmapData = () => {
-  const data = []
-  for (let i = 0; i < 84; i++) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toISOString().split("T")[0],
-      count: Math.floor(Math.random() * 15),
-    })
-  }
+  const data: { date: string; count: number }[] = []
   return data
 }
 

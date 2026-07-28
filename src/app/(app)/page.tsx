@@ -126,7 +126,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">LeetCode Streak</p>
-                  <p className="text-2xl font-bold">12 Days</p>
+                  <p className="text-2xl font-bold">0 Days</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-yellow-400/10 flex items-center justify-center">
                   <Flame className="h-5 w-5 text-yellow-400" />
@@ -142,7 +142,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Level</p>
-                  <p className="text-2xl font-bold">Lv. 8</p>
+                  <p className="text-2xl font-bold">Lv. 0</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
                   <Zap className="h-5 w-5 text-purple-400" />
@@ -216,10 +216,10 @@ export default function DashboardPage() {
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Target className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <p className="text-sm font-medium">Active Goals</p>
-                <p className="text-xl font-bold">4</p>
-              </div>
+                <div>
+                  <p className="text-sm font-medium">Active Goals</p>
+                  <p className="text-xl font-bold">0</p>
+                </div>
               <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
             </CardContent>
           </Card>
@@ -231,10 +231,10 @@ export default function DashboardPage() {
               <div className="h-10 w-10 rounded-lg bg-yellow-400/10 flex items-center justify-center">
                 <Code2 className="h-5 w-5 text-yellow-400" />
               </div>
-              <div>
-                <p className="text-sm font-medium">Problems Solved</p>
-                <p className="text-xl font-bold">156</p>
-              </div>
+                <div>
+                  <p className="text-sm font-medium">Problems Solved</p>
+                  <p className="text-xl font-bold">0</p>
+                </div>
               <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
             </CardContent>
           </Card>
@@ -246,10 +246,10 @@ export default function DashboardPage() {
               <div className="h-10 w-10 rounded-lg bg-green-400/10 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-green-400" />
               </div>
-              <div>
-                <p className="text-sm font-medium">Habit Streak</p>
-                <p className="text-xl font-bold">23 Days</p>
-              </div>
+                <div>
+                  <p className="text-sm font-medium">Habit Streak</p>
+                  <p className="text-xl font-bold">0 Days</p>
+                </div>
               <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
             </CardContent>
           </Card>

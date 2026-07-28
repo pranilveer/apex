@@ -24,19 +24,7 @@ interface TopicData {
   bookmarks: string[]
 }
 
-const initialTopics: TopicData[] = [
-  { id: "dsa", label: "DSA", icon: "💻", color: "purple", progress: 65, notes: "Arrays, Linked Lists, Trees done. Focus on Graphs and DP.", resources: ["LeetCode Blind 75", "NeetCode Roadmap"], bookmarks: ["https://neetcode.io"] },
-  { id: "javascript", label: "JavaScript", icon: "⚡", color: "yellow", progress: 75, notes: "Closures, Prototypes, Event Loop covered. Need to review Promise internals.", resources: ["javascript.info", "You Don't Know JS"], bookmarks: [] },
-  { id: "react", label: "React", icon: "⚛️", color: "cyan", progress: 80, notes: "Hooks, Context, Performance optimization. Practice custom hooks.", resources: ["React docs", "Kent C. Dodds Blog"], bookmarks: ["https://kentcdodds.com"] },
-  { id: "node", label: "Node.js", icon: "🟢", color: "green", progress: 55, notes: "Express basics done. Need to learn event-driven architecture.", resources: ["Node.js docs", "Designing Node.js"], bookmarks: [] },
-  { id: "system-design", label: "System Design", icon: "🏗️", color: "blue", progress: 30, notes: "Read Alex Xu Vol 1. Practice URL shortener and Chat system.", resources: ["Alex Xu Vol 1 & 2", "System Design Interview"], bookmarks: ["https://github.com/donnemartin/system-design-primer"] },
-  { id: "os", label: "Operating System", icon: "🖥️", color: "orange", progress: 40, notes: "Process vs Thread, Scheduling, Memory management basics.", resources: ["Operating Systems: Three Easy Pieces"], bookmarks: [] },
-  { id: "dbms", label: "DBMS", icon: "🗄️", color: "pink", progress: 50, notes: "Normalization, Indexing, Transactions done. Practice SQL queries.", resources: ["SQLBolt", "Stanford DB Course"], bookmarks: [] },
-  { id: "cn", label: "Computer Networks", icon: "🌐", color: "indigo", progress: 35, notes: "OSI model, TCP/IP, HTTP basics. Need to study DNS, load balancing.", resources: ["Computer Networking: Kurose & Ross"], bookmarks: [] },
-  { id: "oop", label: "OOP", icon: "📦", color: "teal", progress: 70, notes: "SOLID principles, Design Patterns basics. Practice with code.", resources: ["Head First Design Patterns"], bookmarks: [] },
-  { id: "hr", label: "HR Questions", icon: "👥", color: "rose", progress: 45, notes: "Why company, Strengths/Weaknesses, Salary negotiation.", resources: ["Glassdoor HR questions"], bookmarks: [] },
-  { id: "behavioral", label: "Behavioral", icon: "💬", color: "lime", progress: 40, notes: "STAR method. Prepare 8-10 stories for leadership, conflict, teamwork.", resources: ["STAR Method Guide", "Amazon Leadership Principles"], bookmarks: [] },
-]
+const initialTopics: TopicData[] = []
 
 const colorMap: Record<string, string> = {
   purple: "border-purple-400/30 bg-purple-400/5",

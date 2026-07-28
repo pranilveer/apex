@@ -25,14 +25,7 @@ interface Job {
   notes: string
 }
 
-const initialJobs: Job[] = [
-  { id: "1", company: "Google", role: "SDE-2", status: "applied", appliedDate: "2026-07-20", referralStatus: "Pending from contact", salaryOffered: 0, expectedSalary: 2500000, notes: "Applied through referral" },
-  { id: "2", company: "Microsoft", role: "SDE-II", status: "oa", appliedDate: "2026-07-15", referralStatus: "Referral confirmed", salaryOffered: 0, expectedSalary: 2200000, notes: "OA scheduled for next week" },
-  { id: "3", company: "Amazon", role: "SDE-1", status: "interview", appliedDate: "2026-07-10", referralStatus: "Through careers page", salaryOffered: 0, expectedSalary: 2000000, notes: "Phone screen done" },
-  { id: "4", company: "Atlassian", role: "SSE", status: "applied", appliedDate: "2026-07-22", referralStatus: "Cold email sent", salaryOffered: 0, expectedSalary: 2000000, notes: "" },
-  { id: "5", company: "Flipkart", role: "SDE-2", status: "rejected", appliedDate: "2026-06-30", referralStatus: "", salaryOffered: 0, expectedSalary: 1800000, notes: "Rejected after system design round" },
-  { id: "6", company: "Razorpay", role: "SDE-1", status: "offer", appliedDate: "2026-06-15", referralStatus: "LinkedIn", salaryOffered: 1800000, expectedSalary: 1500000, notes: "Received offer!" },
-]
+const initialJobs: Job[] = []
 
 const statusFlow = ["applied", "oa", "interview", "hr", "offer", "rejected"]
 
@@ -162,7 +155,7 @@ export default function JobsPage() {
             <CardHeader><CardTitle className="text-base">Wishlist Companies</CardTitle></CardHeader>
             <CardContent>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {["Google", "Microsoft", "Amazon", "Atlassian", "Stripe", "Razorpay", "Flipkart", "Swiggy", "PhonePe"].map((c) => (
+                {[].map((c: string) => (
                   <div key={c} className="flex items-center justify-between p-3 rounded-lg border border-border">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{c.slice(0, 2)}</div>

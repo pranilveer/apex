@@ -30,17 +30,9 @@ interface ApplicationRecord {
   notes: string
 }
 
-const initialResumes: Resume[] = [
-  { id: "1", name: "Full Stack Developer", version: "v3.2", isDefault: true, coverLetter: "Experienced full-stack developer with expertise in React, Node.js, and cloud technologies...", createdAt: "2026-07-20" },
-  { id: "2", name: "Frontend Specialist", version: "v2.1", isDefault: false, coverLetter: "Passionate frontend developer focused on creating exceptional user experiences...", createdAt: "2026-07-15" },
-  { id: "3", name: "SDE General", version: "v1.0", isDefault: false, coverLetter: "", createdAt: "2026-07-01" },
-]
+const initialResumes: Resume[] = []
 
-const initialApplications: ApplicationRecord[] = [
-  { id: "1", company: "Google", resumeUsed: "Full Stack Developer v3.2", result: "applied", date: "2026-07-20", notes: "Applied for SDE-2 role" },
-  { id: "2", company: "Microsoft", resumeUsed: "Full Stack Developer v3.2", result: "oa", date: "2026-07-15", notes: "OA received" },
-  { id: "3", company: "Razorpay", resumeUsed: "Frontend Specialist v2.1", result: "offer", date: "2026-06-15", notes: "Got the offer!" },
-]
+const initialApplications: ApplicationRecord[] = []
 
 export default function ResumesPage() {
   const [resumes, setResumes] = useState<Resume[]>(initialResumes)

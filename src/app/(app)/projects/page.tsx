@@ -29,34 +29,7 @@ interface Project {
   tasks: ProjectTask[]
 }
 
-const initialProjects: Project[] = [
-  {
-    id: "1", name: "Daily Tracker", description: "Full-stack productivity app for interview prep", status: "in-progress",
-    techStack: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "TailwindCSS"], repoUrl: "https://github.com/user/daily-tracker", liveUrl: "",
-    features: ["Dashboard", "LeetCode Tracker", "GitHub Tracker", "Habit Tracker"],
-    tasks: [
-      { id: "t1", title: "Setup database schema", status: "done" },
-      { id: "t2", title: "Build dashboard UI", status: "done" },
-      { id: "t3", title: "Implement auth", status: "in-progress" },
-      { id: "t4", title: "Add analytics charts", status: "todo" },
-    ],
-  },
-  {
-    id: "2", name: "Portfolio Site", description: "Personal portfolio with blog and projects showcase", status: "in-progress",
-    techStack: ["React", "Vite", "TailwindCSS", "Framer Motion"], repoUrl: "https://github.com/user/portfolio", liveUrl: "https://portfolio.dev",
-    features: ["Hero Section", "Projects Showcase", "Blog", "Contact Form"],
-    tasks: [
-      { id: "t5", title: "Design hero section", status: "done" },
-      { id: "t6", title: "Build blog with MDX", status: "in-progress" },
-    ],
-  },
-  {
-    id: "3", name: "Algo Practice", description: "DSA solutions repository with explanations", status: "completed",
-    techStack: ["Python", "Java"], repoUrl: "https://github.com/user/algo-practice", liveUrl: "",
-    features: ["50+ DSA solutions", "Pattern-based approach", "Company tags"],
-    tasks: [],
-  },
-]
+const initialProjects: Project[] = []
 
 const statusColors: Record<string, string> = {
   "planning": "text-blue-400 bg-blue-400/10",

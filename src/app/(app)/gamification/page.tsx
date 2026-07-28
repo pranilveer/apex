@@ -12,33 +12,15 @@ const levelThresholds = Array.from({ length: 50 }, (_, i) => ({
   title: i < 5 ? "Beginner" : i < 15 ? "Intermediate" : i < 30 ? "Advanced" : "Master",
 }))
 
-const currentXP = 2350
-const currentLevel = 24
-const currentStreak = 23
-const longestStreak = 31
-const dailyScore = 78
+const currentXP = 0
+const currentLevel = 0
+const currentStreak = 0
+const longestStreak = 0
+const dailyScore = 0
 
-const badges = [
-  { id: "first-day", name: "First Day", icon: "🌟", description: "Complete your first day", earned: true },
-  { id: "week-streak", name: "Week Warrior", icon: "🔥", description: "7 day streak", earned: true },
-  { id: "month-streak", name: "Monthly Master", icon: "👑", description: "30 day streak", earned: false },
-  { id: "hundred-leetcode", name: "Century Coder", icon: "💯", description: "Solve 100 LeetCode problems", earned: true },
-  { id: "early-bird", name: "Early Bird", icon: "🐦", description: "Wake up before 6 AM for 7 days", earned: true },
-  { id: "gym-rat", name: "Gym Rat", icon: "💪", description: "30 day gym streak", earned: false },
-  { id: "code-monkey", name: "Code Monkey", icon: "🐙", description: "100 GitHub contributions in a month", earned: false },
-  { id: "interview-ready", name: "Interview Ready", icon: "🎯", description: "Complete all interview prep topics", earned: false },
-  { id: "bookworm", name: "Bookworm", icon: "📚", description: "Read 10 books", earned: false },
-  { id: "hydrated", name: "Stay Hydrated", icon: "💧", description: "30 day water intake streak", earned: true },
-]
+const badges: { id: string; name: string; icon: string; description: string; earned: boolean }[] = []
 
-const weeklyRankings = [
-  { week: "Week 1", rank: 5, score: 72 },
-  { week: "Week 2", rank: 3, score: 85 },
-  { week: "Week 3", rank: 4, score: 68 },
-  { week: "Week 4", rank: 1, score: 91 },
-  { week: "Week 5", rank: 2, score: 88 },
-  { week: "Week 6", rank: 1, score: 95 },
-]
+const weeklyRankings: { week: string; rank: number; score: number }[] = []
 
 export default function GamificationPage() {
   const xpForNextLevel = currentLevel * 100

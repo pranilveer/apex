@@ -34,11 +34,11 @@ export default function SettingsPage() {
             <CardHeader><CardTitle className="text-base">Profile</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                <div><Label>Name</Label><Input defaultValue="Developer" className="mt-1" /></div>
-                <div><Label>Email</Label><Input defaultValue="dev@example.com" className="mt-1" /></div>
+                <div><Label>Name</Label><Input defaultValue="" className="mt-1" /></div>
+                <div><Label>Email</Label><Input defaultValue="" className="mt-1" /></div>
               </div>
-              <div><Label>Current Role</Label><Input defaultValue="Software Engineer" className="mt-1" /></div>
-              <div><Label>Target Companies</Label><Input defaultValue="Google, Microsoft, Amazon, Atlassian" className="mt-1" /></div>
+              <div><Label>Current Role</Label><Input defaultValue="" className="mt-1" /></div>
+              <div><Label>Target Companies</Label><Input defaultValue="" className="mt-1" /></div>
               <Button>Save Changes</Button>
             </CardContent>
           </Card>

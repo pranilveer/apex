@@ -27,18 +27,7 @@ interface JournalEntry {
   energy: number
 }
 
-const initialEntries: Record<string, JournalEntry> = {
-  "2026-07-27": {
-    date: "2026-07-27",
-    morningGoals: "1. Solve 3 LeetCode problems\n2. Complete dashboard UI\n3. Read for 30 minutes\n4. Gym - Push day",
-    eveningReflection: "Good day overall. Solved 2 LC problems, one medium was tricky. Dashboard looks great. Skipped reading but gym was solid.",
-    wins: "Nailed the sliding window problem. Dashboard UI came out really clean.",
-    mistakes: "Wasted 30 minutes on social media. Should have read instead.",
-    tomorrowPlan: "1. Solve 3 more LC problems (focus on trees)\n2. Implement auth\n3. Read for 30 min\n4. Gym - Pull day",
-    mood: "good",
-    energy: 7,
-  },
-}
+const initialEntries: Record<string, JournalEntry> = {}
 
 export default function JournalPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])

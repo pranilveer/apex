@@ -24,14 +24,7 @@ interface Goal {
   priority: string
 }
 
-const initialGoals: Goal[] = [
-  { id: "1", title: "Crack Product Company", description: "Get into Google/Microsoft/Amazon", targetDate: "2026-12-31", targetValue: 1, currentValue: 0, unit: "offer", category: "career", priority: "high" },
-  { id: "2", title: "Reach 15+ LPA", description: "Switch to a higher paying role", targetDate: "2026-12-31", targetValue: 15, currentValue: 8, unit: "LPA", category: "career", priority: "high" },
-  { id: "3", title: "Complete 500 LeetCode Problems", description: "Solve 500 problems across all difficulties", targetDate: "2026-10-31", targetValue: 500, currentValue: 156, unit: "problems", category: "coding", priority: "high" },
-  { id: "4", title: "Reach 1000 GitHub Contributions", description: "Active open source contributions", targetDate: "2026-12-31", targetValue: 1000, currentValue: 342, unit: "contributions", category: "coding", priority: "medium" },
-  { id: "5", title: "Complete System Design", description: "Finish Alex Xu books + practice 50 designs", targetDate: "2026-09-30", targetValue: 50, currentValue: 12, unit: "designs", category: "learning", priority: "high" },
-  { id: "6", title: "Read 24 Books", description: "Read at least 2 books per month", targetDate: "2026-12-31", targetValue: 24, currentValue: 8, unit: "books", category: "growth", priority: "low" },
-]
+const initialGoals: Goal[] = []
 
 const priorityColors: Record<string, string> = {
   high: "text-red-400 bg-red-400/10",

@@ -26,25 +26,9 @@ interface Problem {
   notes: string
 }
 
-const initialProblems: Problem[] = [
-  { id: "1", name: "Two Sum", difficulty: "Easy", topic: "Arrays", pattern: "Hash Map", solvedDate: "2026-07-25", timeTaken: 10, needsRevision: false, companyTags: ["Google", "Amazon"], notes: "Classic two pointer approach" },
-  { id: "2", name: "Longest Substring Without Repeating Characters", difficulty: "Medium", topic: "Strings", pattern: "Sliding Window", solvedDate: "2026-07-25", timeTaken: 25, needsRevision: true, companyTags: ["Microsoft"], notes: "Need to revise sliding window pattern" },
-  { id: "3", name: "Median of Two Sorted Arrays", difficulty: "Hard", topic: "Arrays", pattern: "Binary Search", solvedDate: "2026-07-24", timeTaken: 45, needsRevision: true, companyTags: ["Google", "Amazon", "Microsoft"], notes: "Complex binary search on answer" },
-  { id: "4", name: "Valid Parentheses", difficulty: "Easy", topic: "Stack", pattern: "Stack", solvedDate: "2026-07-24", timeTaken: 8, needsRevision: false, companyTags: ["Amazon"], notes: "" },
-  { id: "5", name: "LRU Cache", difficulty: "Medium", topic: "Design", pattern: "Hash Map + DLL", solvedDate: "2026-07-23", timeTaken: 35, needsRevision: false, companyTags: ["Google", "Facebook"], notes: "Important design pattern" },
-  { id: "6", name: "Merge K Sorted Lists", difficulty: "Hard", topic: "Linked List", pattern: "Heap", solvedDate: "2026-07-23", timeTaken: 40, needsRevision: true, companyTags: ["Amazon"], notes: "" },
-]
+const initialProblems: Problem[] = []
 
-const topicStats = [
-  { topic: "Arrays", solved: 24, total: 45 },
-  { topic: "Strings", solved: 18, total: 30 },
-  { topic: "Linked List", solved: 12, total: 20 },
-  { topic: "Trees", solved: 15, total: 35 },
-  { topic: "Graphs", solved: 8, total: 25 },
-  { topic: "DP", solved: 10, total: 40 },
-  { topic: "Stack", solved: 14, total: 18 },
-  { topic: "Design", solved: 5, total: 10 },
-]
+const topicStats: { topic: string; solved: number; total: number }[] = []
 
 export default function LeetcodePage() {
   const [problems, setProblems] = useState<Problem[]>(initialProblems)

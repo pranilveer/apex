@@ -22,16 +22,7 @@ interface Resource {
   bookmarked: boolean
 }
 
-const initialResources: Resource[] = [
-  { id: "1", title: "NeetCode Roadmap", url: "https://neetcode.io", type: "link", category: ["DSA"], notes: "Best roadmap for LeetCode preparation", bookmarked: true },
-  { id: "2", title: "System Design Primer", url: "https://github.com/donnemartin/system-design-primer", type: "article", category: ["System Design"], notes: "Comprehensive guide to system design", bookmarked: true },
-  { id: "3", title: "React Official Docs", url: "https://react.dev", type: "link", category: ["React"], notes: "New React docs with hooks", bookmarked: false },
-  { id: "4", title: "JavaScript.info", url: "https://javascript.info", type: "course", category: ["JavaScript"], notes: "Modern JavaScript tutorial", bookmarked: true },
-  { id: "5", title: "Designing Data-Intensive Applications", url: "", type: "book", category: ["System Design", "Node"], notes: "Must read for system design interviews", bookmarked: true },
-  { id: "6", title: "Node.js Design Patterns", url: "", type: "book", category: ["Node"], notes: "Deep dive into Node.js patterns", bookmarked: false },
-  { id: "7", title: "ByteByteGo - System Design", url: "https://bytebytego.com", type: "course", category: ["System Design"], notes: "Alex Xu's visual system design course", bookmarked: true },
-  { id: "8", title: "Redis University", url: "https://university.redis.com", type: "course", category: ["Redis"], notes: "Free Redis courses", bookmarked: false },
-]
+const initialResources: Resource[] = []
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   youtube: Youtube,

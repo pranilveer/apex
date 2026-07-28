@@ -20,23 +20,8 @@ const habits = [
   { id: "office", label: "Office", icon: Building2, color: "text-blue-300", bgColor: "bg-blue-300/10" },
 ]
 
-const seededRandom = (seed: number) => {
-  const x = Math.sin(seed + 1) * 10000
-  return x - Math.floor(x)
-}
-
 const generateMonthData = () => {
   const data: Record<string, Record<string, boolean>> = {}
-  const today = new Date()
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-    const key = date.toISOString().split("T")[0]
-    data[key] = {}
-    habits.forEach((h, hi) => {
-      data[key][h.id] = seededRandom(i * 10 + hi) > 0.3
-    })
-  }
   return data
 }
 

@@ -19,14 +19,7 @@ interface Notification {
   read: boolean
 }
 
-const initialNotifications: Notification[] = [
-  { id: "1", title: "Morning Reminder", message: "Start your day with a plan. Review today's goals.", type: "reminder", time: "06:00 AM", read: false },
-  { id: "2", title: "Workout Reminder", message: "Time for gym! Don't skip today.", type: "reminder", time: "06:30 AM", read: false },
-  { id: "3", title: "LeetCode Reminder", message: "Solve at least 2 problems today to maintain your streak.", type: "reminder", time: "10:00 AM", read: true },
-  { id: "4", title: "GitHub Reminder", message: "Make your daily contribution. Keep the green squares alive!", type: "reminder", time: "06:00 PM", read: true },
-  { id: "5", title: "Sleep Reminder", message: "Wind down. Sleep before 12 AM for better recovery.", type: "reminder", time: "11:00 PM", read: true },
-  { id: "6", title: "Interview Reminder", message: "Microsoft OA scheduled for tomorrow at 2 PM.", type: "info", time: "08:00 PM", read: false },
-]
+const initialNotifications: Notification[] = []
 
 const reminderDefaults = [
   { id: "morning", label: "Morning Reminder", icon: Clock, time: "06:00", enabled: true },
