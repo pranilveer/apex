@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Github, Plus, GitCommit, Calendar, TrendingUp, Trash2, ExternalLink, Star, GitFork } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { generateId } from "@/lib/utils"
+import { fetchGitHubActivities, addGitHubActivity, deleteGitHubActivity } from "@/actions"
 import { Label } from "@/components/ui/label"
 
 interface CommitEntry {
@@ -27,7 +29,7 @@ const generateHeatmapData = () => {
 }
 
 export default function GitHubPage() {
-  const [commits, setCommits] = useState<CommitEntry[]>(initialCommits)
+  const [commits, setCommits] = useState<CommitEntry[]>([])
   const [open, setOpen] = useState(false)
   const [newEntry, setNewEntry] = useState({ repository: "", commitCount: 0, featureBuilt: "", hoursSpent: 0 })
   const heatmapData = generateHeatmapData()
@@ -43,14 +45,24 @@ export default function GitHubPage() {
   })
   const weekCommits = thisWeek.reduce((sum, c) => sum + c.commitCount, 0)
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchGitHubActivities().then(setCommits)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newEntry.repository) return
-    setCommits([{ id: Date.now().toString(), date: new Date().toISOString().split("T")[0], ...newEntry }, ...commits])
+    const id = generateId()
+    const entry: CommitEntry = { id, date: new Date().toISOString().split("T")[0], ...newEntry }
+    setCommits([entry, ...commits])
     setOpen(false)
     setNewEntry({ repository: "", commitCount: 0, featureBuilt: "", hoursSpent: 0 })
+    await addGitHubActivity(entry)
   }
 
-  const handleDelete = (id: string) => setCommits(commits.filter((c) => c.id !== id))
+  const handleDelete = async (id: string) => {
+    setCommits(commits.filter((c) => c.id !== id))
+    await deleteGitHubActivity(id)
+  }
 
   const getHeatColor = (count: number) => {
     if (count === 0) return "bg-secondary"

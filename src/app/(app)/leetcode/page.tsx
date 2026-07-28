@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Code2, Plus, Flame, CheckCircle2, AlertTriangle, Brain, ExternalLink, Trash2, Search } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { getDifficultyColor } from "@/lib/utils"
+import { getDifficultyColor, generateId } from "@/lib/utils"
+import { fetchLeetCodeProblems, addLeetCodeProblem, toggleRevision, deleteLeetCodeProblem } from "@/actions"
 
 interface Problem {
   id: string
@@ -31,7 +32,7 @@ const initialProblems: Problem[] = []
 const topicStats: { topic: string; solved: number; total: number }[] = []
 
 export default function LeetcodePage() {
-  const [problems, setProblems] = useState<Problem[]>(initialProblems)
+  const [problems, setProblems] = useState<Problem[]>([])
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
   const [newProblem, setNewProblem] = useState({ name: "", difficulty: "Easy" as "Easy" | "Medium" | "Hard", topic: "", pattern: "", timeTaken: 0, needsRevision: false, companyTags: "", notes: "" })
@@ -43,10 +44,15 @@ export default function LeetcodePage() {
 
   const filtered = problems.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.topic.toLowerCase().includes(search.toLowerCase()))
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchLeetCodeProblems().then(setProblems)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newProblem.name) return
-    setProblems([...problems, {
-      id: Date.now().toString(),
+    const id = generateId()
+    const problem: Problem = {
+      id,
       name: newProblem.name,
       difficulty: newProblem.difficulty,
       topic: newProblem.topic,
@@ -56,16 +62,25 @@ export default function LeetcodePage() {
       needsRevision: newProblem.needsRevision,
       companyTags: newProblem.companyTags.split(",").map((t) => t.trim()).filter(Boolean),
       notes: newProblem.notes,
-    }])
+    }
+    setProblems([...problems, problem])
     setOpen(false)
     setNewProblem({ name: "", difficulty: "Easy", topic: "", pattern: "", timeTaken: 0, needsRevision: false, companyTags: "", notes: "" })
+    await addLeetCodeProblem(problem)
   }
 
-  const toggleRevision = (id: string) => {
-    setProblems(problems.map((p) => p.id === id ? { ...p, needsRevision: !p.needsRevision } : p))
+  const handleToggleRevision = async (id: string) => {
+    const problem = problems.find((p) => p.id === id)
+    if (!problem) return
+    const next = !problem.needsRevision
+    setProblems(problems.map((p) => p.id === id ? { ...p, needsRevision: next } : p))
+    await toggleRevision(id, next)
   }
 
-  const deleteProblem = (id: string) => setProblems(problems.filter((p) => p.id !== id))
+  const handleDeleteProblem = async (id: string) => {
+    setProblems(problems.filter((p) => p.id !== id))
+    await deleteLeetCodeProblem(id)
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -137,10 +152,10 @@ export default function LeetcodePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {p.companyTags.map((tag) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleRevision(p.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleRevision(p.id)}>
                           <Brain className={`h-4 w-4 ${p.needsRevision ? "text-orange-400" : "text-muted-foreground"}`} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteProblem(p.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteProblem(p.id)}>
                           <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
@@ -164,7 +179,7 @@ export default function LeetcodePage() {
                       <p className="text-xs text-muted-foreground">{p.topic} · {p.difficulty}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => toggleRevision(p.id)}>Mark Reviewed</Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleToggleRevision(p.id)}>Mark Reviewed</Button>
                 </CardContent>
               </Card>
             </motion.div>

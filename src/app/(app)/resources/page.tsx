@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Bookmark, Plus, ExternalLink, Search, Youtube, BookOpen, FileText, Link2, Filter, Trash2, Star } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RESOURCE_CATEGORIES } from "@/lib/constants"
+import { generateId } from "@/lib/utils"
+import { fetchResources, addResource, toggleBookmark, deleteResource } from "@/actions"
 
 interface Resource {
   id: string
@@ -33,7 +35,7 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 }
 
 export default function ResourcesPage() {
-  const [resources, setResources] = useState<Resource[]>(initialResources)
+  const [resources, setResources] = useState<Resource[]>([])
   const [search, setSearch] = useState("")
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -45,22 +47,36 @@ export default function ResourcesPage() {
     return matchSearch && matchCategory
   })
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchResources().then(setResources)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newResource.title) return
-    setResources([...resources, {
-      id: Date.now().toString(), title: newResource.title, url: newResource.url,
+    const id = generateId()
+    const resource: Resource = {
+      id, title: newResource.title, url: newResource.url,
       type: newResource.type, category: newResource.category.split(",").map((c) => c.trim()).filter(Boolean),
       notes: newResource.notes, bookmarked: false,
-    }])
+    }
+    setResources([...resources, resource])
     setOpen(false)
     setNewResource({ title: "", url: "", type: "article", category: "", notes: "" })
+    await addResource(resource)
   }
 
-  const toggleBookmark = (id: string) => {
-    setResources(resources.map((r) => r.id === id ? { ...r, bookmarked: !r.bookmarked } : r))
+  const handleToggleBookmark = async (id: string) => {
+    const resource = resources.find((r) => r.id === id)
+    if (!resource) return
+    const next = !resource.bookmarked
+    setResources(resources.map((r) => r.id === id ? { ...r, bookmarked: next } : r))
+    await toggleBookmark(id, next)
   }
 
-  const handleDelete = (id: string) => setResources(resources.filter((r) => r.id !== id))
+  const handleDelete = async (id: string) => {
+    setResources(resources.filter((r) => r.id !== id))
+    await deleteResource(id)
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -134,7 +150,7 @@ export default function ResourcesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleBookmark(r.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleBookmark(r.id)}>
                         <Star className={`h-4 w-4 ${r.bookmarked ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(r.id)}>

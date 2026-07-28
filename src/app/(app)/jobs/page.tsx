@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Briefcase, Plus, ExternalLink, Phone, Mail, Trash2, CheckCircle2, XCircle, Clock, FileText, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { getStatusColor } from "@/lib/utils"
+import { getStatusColor, generateId } from "@/lib/utils"
+import { fetchJobs, addJob, updateJobStatus, deleteJob } from "@/actions"
 
 interface Job {
   id: string
@@ -30,7 +31,7 @@ const initialJobs: Job[] = []
 const statusFlow = ["applied", "oa", "interview", "hr", "offer", "rejected"]
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>(initialJobs)
+  const [jobs, setJobs] = useState<Job[]>([])
   const [open, setOpen] = useState(false)
   const [newJob, setNewJob] = useState({ company: "", role: "", notes: "", expectedSalary: 0 })
 
@@ -43,22 +44,33 @@ export default function JobsPage() {
     offer: jobs.filter((j) => j.status === "offer").length,
   }
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchJobs().then(setJobs)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newJob.company) return
-    setJobs([...jobs, {
-      id: Date.now().toString(), company: newJob.company, role: newJob.role,
+    const id = generateId()
+    const job: Job = {
+      id, company: newJob.company, role: newJob.role,
       status: "applied", appliedDate: new Date().toISOString().split("T")[0],
       referralStatus: "", salaryOffered: 0, expectedSalary: newJob.expectedSalary, notes: newJob.notes,
-    }])
+    }
+    setJobs([...jobs, job])
     setOpen(false)
     setNewJob({ company: "", role: "", notes: "", expectedSalary: 0 })
+    await addJob(job)
   }
 
-  const updateStatus = (id: string, status: string) => {
+  const handleUpdateStatus = async (id: string, status: string) => {
     setJobs(jobs.map((j) => j.id === id ? { ...j, status } : j))
+    await updateJobStatus(id, status)
   }
 
-  const handleDelete = (id: string) => setJobs(jobs.filter((j) => j.id !== id))
+  const handleDelete = async (id: string) => {
+    setJobs(jobs.filter((j) => j.id !== id))
+    await deleteJob(id)
+  }
 
   const bestOffer = jobs.filter((j) => j.salaryOffered > 0).sort((a, b) => b.salaryOffered - a.salaryOffered)[0]
   const avgExpected = Math.round(jobs.reduce((sum, j) => sum + j.expectedSalary, 0) / jobs.length)
@@ -136,7 +148,7 @@ export default function JobsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <select className="h-8 rounded-md border border-border bg-secondary px-2 text-xs" value={job.status} onChange={(e) => updateStatus(job.id, e.target.value)}>
+                      <select className="h-8 rounded-md border border-border bg-secondary px-2 text-xs" value={job.status} onChange={(e) => handleUpdateStatus(job.id, e.target.value)}>
                         {statusFlow.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(job.id)}>

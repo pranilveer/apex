@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { Brain, Sparkles, Send, TrendingUp, Code2, BookOpen, Target, MessageSquare, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

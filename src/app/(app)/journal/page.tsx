@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { PenLine, Sun, Moon as MoonIcon, Trophy, AlertTriangle, Calendar, Smile, Zap, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { fetchJournalEntries, saveJournalEntry } from "@/actions"
 
 const moodOptions = [
   { value: "great", emoji: "🔥", label: "Great", color: "text-green-400" },
@@ -31,23 +32,30 @@ const initialEntries: Record<string, JournalEntry> = {}
 
 export default function JournalPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
-  const [entries, setEntries] = useState<Record<string, JournalEntry>>(initialEntries)
-  const [editing, setEditing] = useState(false)
+  const [entries, setEntries] = useState<Record<string, JournalEntry>>({})
 
   const entry = entries[selectedDate] || {
     date: selectedDate, morningGoals: "", eveningReflection: "", wins: "", mistakes: "", tomorrowPlan: "", mood: "", energy: 5,
   }
 
-  const updateField = (field: keyof JournalEntry, value: string | number) => {
+  useEffect(() => {
+    fetchJournalEntries().then((data) => {
+      const map: Record<string, JournalEntry> = {}
+      data.forEach((e) => { map[e.date] = e })
+      setEntries(map)
+    })
+  }, [])
+
+  const updateField = async (field: keyof JournalEntry, value: string | number) => {
     const updated = { ...entry, [field]: value }
     setEntries({ ...entries, [selectedDate]: updated })
+    await saveJournalEntry(updated)
   }
 
   const changeDate = (offset: number) => {
     const d = new Date(selectedDate)
     d.setDate(d.getDate() + offset)
     setSelectedDate(d.toISOString().split("T")[0])
-    setEditing(false)
   }
 
   const isToday = selectedDate === new Date().toISOString().split("T")[0]

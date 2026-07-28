@@ -1,10 +1,13 @@
 "use client"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Trophy, Flame, Zap, Star, Target, Medal, Crown, Award, TrendingUp, CheckCircle2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { BADGES } from "@/lib/constants"
+import { fetchGamificationData } from "@/actions"
 
 const levelThresholds = Array.from({ length: 50 }, (_, i) => ({
   level: i + 1,
@@ -12,19 +15,17 @@ const levelThresholds = Array.from({ length: 50 }, (_, i) => ({
   title: i < 5 ? "Beginner" : i < 15 ? "Intermediate" : i < 30 ? "Advanced" : "Master",
 }))
 
-const currentXP = 0
-const currentLevel = 0
-const currentStreak = 0
-const longestStreak = 0
-const dailyScore = 0
-
-const badges: { id: string; name: string; icon: string; description: string; earned: boolean }[] = []
-
-const weeklyRankings: { week: string; rank: number; score: number }[] = []
-
 export default function GamificationPage() {
-  const xpForNextLevel = currentLevel * 100
-  const currentLevelXP = currentXP % 100
+  const [data, setData] = useState<{ xp: number; level: number; currentStreak: number; longestStreak: number; dailyScore: number; badges: string[] }>({
+    xp: 0, level: 0, currentStreak: 0, longestStreak: 0, dailyScore: 0, badges: [],
+  })
+
+  useEffect(() => {
+    fetchGamificationData().then((d) => { if (d) setData(d) })
+  }, [])
+
+  const xpForNextLevel = data.level * 100
+  const currentLevelXP = data.xp % 100
   const xpProgress = (currentLevelXP / 100) * 100
 
   return (
@@ -44,8 +45,8 @@ export default function GamificationPage() {
                   <Crown className="h-7 w-7 text-primary" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">Lv. {currentLevel}</p>
-                  <p className="text-xs text-muted-foreground">Level {currentLevel}</p>
+                  <p className="text-3xl font-bold">Lv. {data.level}</p>
+                  <p className="text-xs text-muted-foreground">Level {data.level}</p>
                 </div>
               </div>
               <Progress value={xpProgress} className="h-2" />
@@ -62,7 +63,7 @@ export default function GamificationPage() {
                   <Zap className="h-6 w-6 text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{currentXP.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{data.xp.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Total XP</p>
                 </div>
               </div>
@@ -78,7 +79,7 @@ export default function GamificationPage() {
                   <Flame className="h-6 w-6 text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{currentStreak} days</p>
+                  <p className="text-2xl font-bold">{data.currentStreak} days</p>
                   <p className="text-xs text-muted-foreground">Current Streak</p>
                 </div>
               </div>
@@ -94,7 +95,7 @@ export default function GamificationPage() {
                   <TrendingUp className="h-6 w-6 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{dailyScore}%</p>
+                  <p className="text-2xl font-bold">{data.dailyScore}%</p>
                   <p className="text-xs text-muted-foreground">Daily Score</p>
                 </div>
               </div>
@@ -111,22 +112,25 @@ export default function GamificationPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-            {badges.map((badge, i) => (
+            {BADGES.map((badge, i) => {
+              const earned = data.badges.includes(badge.id)
+              return (
               <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
                 <div className={cn("flex flex-col items-center p-4 rounded-xl border transition-all text-center",
-                  badge.earned ? "border-primary/30 bg-primary/5" : "border-border opacity-50 grayscale"
+                  earned ? "border-primary/30 bg-primary/5" : "border-border opacity-50 grayscale"
                 )}>
                   <span className="text-4xl mb-2">{badge.icon}</span>
                   <p className="text-sm font-medium">{badge.name}</p>
                   <p className="text-xs text-muted-foreground mt-1">{badge.description}</p>
-                  {badge.earned ? (
+                  {earned ? (
                     <Badge variant="success" className="mt-2 text-xs">Earned</Badge>
                   ) : (
                     <Badge variant="secondary" className="mt-2 text-xs">Locked</Badge>
                   )}
                 </div>
               </motion.div>
-            ))}
+              )
+            })}
           </div>
         </CardContent>
       </Card>
@@ -135,7 +139,7 @@ export default function GamificationPage() {
         <Card>
           <CardHeader><CardTitle className="text-base">Weekly Rank</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {weeklyRankings.map((w) => (
+            {[].map((w: { week: string; rank: number; score: number }) => (
               <div key={w.week} className="flex items-center justify-between p-3 rounded-lg border border-border">
                 <div className="flex items-center gap-3">
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold",
@@ -156,25 +160,25 @@ export default function GamificationPage() {
           <CardContent className="space-y-6">
             <div className="text-center p-6 rounded-xl bg-gradient-to-br from-orange-400/10 to-red-400/5 border border-orange-400/20">
               <Flame className="h-12 w-12 mx-auto text-orange-400 mb-2" />
-              <p className="text-4xl font-bold">{currentStreak}</p>
+              <p className="text-4xl font-bold">{data.currentStreak}</p>
               <p className="text-sm text-muted-foreground">Day Streak</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="text-center p-4 rounded-lg border border-border">
-                <p className="text-2xl font-bold text-yellow-400">{longestStreak}</p>
+                <p className="text-2xl font-bold text-yellow-400">{data.longestStreak}</p>
                 <p className="text-xs text-muted-foreground">Longest Streak</p>
               </div>
               <div className="text-center p-4 rounded-lg border border-border">
-                <p className="text-2xl font-bold text-primary">{badges.filter((b) => b.earned).length}</p>
+                <p className="text-2xl font-bold text-primary">{data.badges.length}</p>
                 <p className="text-xs text-muted-foreground">Badges Earned</p>
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-muted-foreground">Next milestone</span>
-                <span>{30 - currentStreak} days until Monthly Master</span>
+                <span>{30 - data.currentStreak} days until Monthly Master</span>
               </div>
-              <Progress value={(currentStreak / 30) * 100} className="h-2" />
+              <Progress value={(data.currentStreak / 30) * 100} className="h-2" />
             </div>
           </CardContent>
         </Card>

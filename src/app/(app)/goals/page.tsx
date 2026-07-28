@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Target, Plus, Calendar, TrendingUp, ArrowUpRight, Pencil, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { getDaysLeft, calculatePercentage } from "@/lib/utils"
+import { getDaysLeft, calculatePercentage, generateId } from "@/lib/utils"
+import { fetchGoals, addGoal, updateGoal, deleteGoal } from "@/actions"
 
 interface Goal {
   id: string
@@ -33,18 +34,28 @@ const priorityColors: Record<string, string> = {
 }
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState<Goal[]>(initialGoals)
+  const [goals, setGoals] = useState<Goal[]>([])
   const [open, setOpen] = useState(false)
   const [newGoal, setNewGoal] = useState({ title: "", description: "", targetDate: "", targetValue: 0, unit: "", category: "career", priority: "medium" })
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchGoals().then(setGoals)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newGoal.title) return
-    setGoals([...goals, { ...newGoal, id: Date.now().toString(), currentValue: 0 }])
+    const id = generateId()
+    const goal = { ...newGoal, id, currentValue: 0 }
+    setGoals([...goals, goal])
     setNewGoal({ title: "", description: "", targetDate: "", targetValue: 0, unit: "", category: "career", priority: "medium" })
     setOpen(false)
+    await addGoal(goal)
   }
 
-  const handleDelete = (id: string) => setGoals(goals.filter((g) => g.id !== id))
+  const handleDelete = async (id: string) => {
+    setGoals(goals.filter((g) => g.id !== id))
+    await deleteGoal(id)
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">

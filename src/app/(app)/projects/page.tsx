@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { FolderKanban, Plus, ExternalLink, Github, Trash2, GripVertical, MoreHorizontal } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { generateId } from "@/lib/utils"
+import { fetchProjects, addProject } from "@/actions"
 
 interface ProjectTask {
   id: string
@@ -29,8 +31,6 @@ interface Project {
   tasks: ProjectTask[]
 }
 
-const initialProjects: Project[] = []
-
 const statusColors: Record<string, string> = {
   "planning": "text-blue-400 bg-blue-400/10",
   "in-progress": "text-yellow-400 bg-yellow-400/10",
@@ -39,20 +39,27 @@ const statusColors: Record<string, string> = {
 }
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>(initialProjects)
+  const [projects, setProjects] = useState<Project[]>([])
   const [open, setOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: "", description: "", techStack: "", repoUrl: "", liveUrl: "" })
   const [draggedTask, setDraggedTask] = useState<string | null>(null)
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchProjects().then(setProjects)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newProject.name) return
-    setProjects([...projects, {
-      id: Date.now().toString(), name: newProject.name, description: newProject.description,
+    const id = generateId()
+    const project: Project = {
+      id, name: newProject.name, description: newProject.description,
       status: "planning", techStack: newProject.techStack.split(",").map((t) => t.trim()).filter(Boolean),
       repoUrl: newProject.repoUrl, liveUrl: newProject.liveUrl, features: [], tasks: [],
-    }])
+    }
+    setProjects([...projects, project])
     setOpen(false)
     setNewProject({ name: "", description: "", techStack: "", repoUrl: "", liveUrl: "" })
+    await addProject(project)
   }
 
   const moveTask = (projectId: string, taskId: string, newStatus: ProjectTask["status"]) => {

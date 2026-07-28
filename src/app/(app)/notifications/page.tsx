@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Bell, BellOff, Check, Clock, Dumbbell, Code2, Github, Moon, Briefcase, Plus, Trash2, Settings } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification } from "@/actions"
 
 interface Notification {
   id: string
@@ -31,21 +32,28 @@ const reminderDefaults = [
 ]
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [reminders, setReminders] = useState(reminderDefaults)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  const markAsRead = (id: string) => {
+  useEffect(() => {
+    fetchNotifications().then(setNotifications)
+  }, [])
+
+  const handleMarkAsRead = async (id: string) => {
     setNotifications(notifications.map((n) => n.id === id ? { ...n, read: true } : n))
+    await markNotificationRead(id)
   }
 
-  const markAllRead = () => {
+  const handleMarkAllRead = async () => {
     setNotifications(notifications.map((n) => ({ ...n, read: true })))
+    await markAllNotificationsRead()
   }
 
-  const deleteNotification = (id: string) => {
+  const handleDelete = async (id: string) => {
     setNotifications(notifications.filter((n) => n.id !== id))
+    await deleteNotification(id)
   }
 
   const toggleReminder = (id: string) => {
@@ -61,7 +69,7 @@ export default function NotificationsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="info">{unreadCount} unread</Badge>
-          <Button variant="outline" size="sm" onClick={markAllRead}>Mark all read</Button>
+          <Button variant="outline" size="sm" onClick={handleMarkAllRead}>Mark all read</Button>
         </div>
       </div>
 
@@ -83,8 +91,8 @@ export default function NotificationsPage() {
                     <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    {!n.read && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => markAsRead(n.id)}><Check className="h-3 w-3" /></Button>}
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteNotification(n.id)}><Trash2 className="h-3 w-3" /></Button>
+                    {!n.read && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMarkAsRead(n.id)}><Check className="h-3 w-3" /></Button>}
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDelete(n.id)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
                 </div>
               </motion.div>

@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { FileText, Plus, Upload, Eye, Trash2, Copy, CheckCircle2, ExternalLink } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getStatusColor } from "@/lib/utils"
+import { getStatusColor, generateId } from "@/lib/utils"
+import { fetchResumes, fetchApplicationRecords, addResume, setDefaultResume } from "@/actions"
 
 interface Resume {
   id: string
@@ -35,20 +36,29 @@ const initialResumes: Resume[] = []
 const initialApplications: ApplicationRecord[] = []
 
 export default function ResumesPage() {
-  const [resumes, setResumes] = useState<Resume[]>(initialResumes)
-  const [applications, setApplications] = useState<ApplicationRecord[]>(initialApplications)
+  const [resumes, setResumes] = useState<Resume[]>([])
+  const [applications, setApplications] = useState<ApplicationRecord[]>([])
   const [open, setOpen] = useState(false)
   const [newResume, setNewResume] = useState({ name: "", version: "", coverLetter: "" })
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchResumes().then(setResumes)
+    fetchApplicationRecords().then(setApplications)
+  }, [])
+
+  const handleAdd = async () => {
     if (!newResume.name) return
-    setResumes([...resumes, { id: Date.now().toString(), ...newResume, isDefault: false, createdAt: new Date().toISOString().split("T")[0] }])
+    const id = generateId()
+    const resume: Resume = { id, ...newResume, isDefault: false, createdAt: new Date().toISOString().split("T")[0] }
+    setResumes([...resumes, resume])
     setOpen(false)
     setNewResume({ name: "", version: "", coverLetter: "" })
+    await addResume(resume)
   }
 
-  const setDefault = (id: string) => {
+  const handleSetDefault = async (id: string) => {
     setResumes(resumes.map((r) => ({ ...r, isDefault: r.id === id })))
+    await setDefaultResume(id)
   }
 
   return (
@@ -107,7 +117,7 @@ export default function ResumesPage() {
                   </div>
                   <div className="flex items-center gap-2 pl-[52px]">
                     {!resume.isDefault && (
-                      <Button variant="ghost" size="sm" onClick={() => setDefault(resume.id)} className="text-xs">Set Default</Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleSetDefault(resume.id)} className="text-xs">Set Default</Button>
                     )}
                     <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8"><Copy className="h-4 w-4" /></Button>

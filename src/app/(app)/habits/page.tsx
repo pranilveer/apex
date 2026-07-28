@@ -1,11 +1,12 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle2, Circle, Flame, Dumbbell, Droplets, Moon, BookOpen, Code2, Github, FolderKanban, Building2, Brain } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { fetchHabits, saveHabitEntry } from "@/actions"
 
 const habits = [
   { id: "gym", label: "Gym", icon: Dumbbell, color: "text-green-400", bgColor: "bg-green-400/10" },
@@ -26,15 +27,23 @@ const generateMonthData = () => {
 }
 
 export default function HabitsPage() {
-  const [habitData, setHabitData] = useState(generateMonthData)
+  const [habitData, setHabitData] = useState<Record<string, Record<string, boolean>>>({})
   const today = new Date().toISOString().split("T")[0]
   const todayData = habitData[today] || {}
 
-  const toggleHabit = (habitId: string) => {
-    setHabitData((prev) => ({
-      ...prev,
-      [today]: { ...prev[today], [habitId]: !prev[today]?.[habitId] },
-    }))
+  useEffect(() => {
+    fetchHabits().then((data) => {
+      const map: Record<string, Record<string, boolean>> = {}
+      data.forEach((e) => { map[e.date] = e.habits })
+      setHabitData(map)
+    })
+  }, [])
+
+  const toggleHabit = async (habitId: string) => {
+    const next = !habitData[today]?.[habitId]
+    const newData = { ...habitData, [today]: { ...(habitData[today] || {}), [habitId]: next } }
+    setHabitData(newData)
+    await saveHabitEntry(today, newData[today])
   }
 
   const todayCompleted = habits.filter((h) => todayData[h.id]).length

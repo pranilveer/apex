@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { BookOpen, Plus, ExternalLink, Bookmark, CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { fetchInterviewTopics, updateInterviewTopic } from "@/actions"
 
 interface TopicData {
   id: string
@@ -41,20 +42,29 @@ const colorMap: Record<string, string> = {
 }
 
 export default function InterviewPage() {
-  const [topics, setTopics] = useState<TopicData[]>(initialTopics)
+  const [topics, setTopics] = useState<TopicData[]>([])
   const [selectedTopic, setSelectedTopic] = useState<TopicData | null>(null)
   const [open, setOpen] = useState(false)
   const [newResource, setNewResource] = useState({ title: "", url: "" })
 
-  const avgProgress = Math.round(topics.reduce((sum, t) => sum + t.progress, 0) / topics.length)
+  const avgProgress = topics.length > 0 ? Math.round(topics.reduce((sum, t) => sum + t.progress, 0) / topics.length) : 0
 
-  const updateNotes = (id: string, notes: string) => {
+  useEffect(() => {
+    fetchInterviewTopics().then(setTopics)
+  }, [])
+
+  const updateNotes = async (id: string, notes: string) => {
     setTopics(topics.map((t) => t.id === id ? { ...t, notes } : t))
     if (selectedTopic?.id === id) setSelectedTopic({ ...selectedTopic, notes })
+    await updateInterviewTopic(id, { notes })
   }
 
-  const addResource = (id: string, title: string, url: string) => {
-    setTopics(topics.map((t) => t.id === id ? { ...t, resources: [...t.resources, title], bookmarks: [...t.bookmarks, url] } : t))
+  const addResource = async (id: string, title: string, url: string) => {
+    const topic = topics.find((t) => t.id === id)
+    if (!topic) return
+    const updated = { ...topic, resources: [...topic.resources, title], bookmarks: [...topic.bookmarks, url] }
+    setTopics(topics.map((t) => t.id === id ? updated : t))
+    await updateInterviewTopic(id, { resources: updated.resources, bookmarks: updated.bookmarks })
   }
 
   return (
