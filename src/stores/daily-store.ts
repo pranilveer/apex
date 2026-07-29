@@ -46,20 +46,14 @@ export const useDailyStore = create<DailyState>((set, get) => ({
   loadTasks: async () => {
     try {
       const serverTasks = await fetchDailyTasks()
-      if (serverTasks.length > 0) {
-        const mapped: DailyTaskItem[] = serverTasks.map((t) => ({
-          id: t.id,
-          label: t.label,
-          completed: t.completed,
-          timeSpent: t.timeSpent,
-          notes: t.notes,
-        }))
-        set({ tasks: mapped, loaded: true })
-      } else {
-        const { tasks } = get()
-        await saveDailyTasks(tasks.map((t) => ({ ...t, date: "" })))
-        set({ loaded: true })
-      }
+      const serverMap = new Map(serverTasks.map((t) => [t.id, t]))
+      const merged: DailyTaskItem[] = defaultTasks.map((def) => {
+        const server = serverMap.get(def.id)
+        return server
+          ? { id: server.id, label: server.label, completed: server.completed, timeSpent: server.timeSpent, notes: server.notes }
+          : def
+      })
+      set({ tasks: merged, loaded: true })
     } catch {
       set({ loaded: true })
     }
