@@ -1,6 +1,6 @@
 "use client"
 import { usePathname } from "next/navigation"
-import { Search, Command, Maximize2, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { Search, Command, Menu, Moon, Sun, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useTheme } from "@/components/layout/providers"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,7 @@ const pageTitles: Record<string, string> = {
 
 export function Header() {
   const pathname = usePathname()
-  const { setCommandOpen, toggleFocusMode, sidebarOpen, setSidebarOpen } = useAppStore()
+  const { setCommandOpen, sidebarOpen, setSidebarOpen } = useAppStore()
   const { theme, setTheme } = useTheme()
   const title = pageTitles[pathname] || "Dashboard"
 
@@ -70,9 +70,6 @@ export function Header() {
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={toggleFocusMode} className="h-9 w-9">
-          <Maximize2 className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
