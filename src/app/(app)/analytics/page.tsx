@@ -73,14 +73,12 @@ export default function AnalyticsPage() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="w-full min-w-[400px] md:min-w-0">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="heatmap" className="text-xs sm:text-sm">Heatmap</TabsTrigger>
-            <TabsTrigger value="skills" className="text-xs sm:text-sm">Skills</TabsTrigger>
-            <TabsTrigger value="streaks" className="text-xs sm:text-sm">Streaks</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList className="w-full flex-wrap h-auto min-h-10 gap-1">
+          <TabsTrigger value="overview" className="flex-1 sm:flex-none text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="heatmap" className="flex-1 sm:flex-none text-xs sm:text-sm">Heatmap</TabsTrigger>
+          <TabsTrigger value="skills" className="flex-1 sm:flex-none text-xs sm:text-sm">Skills</TabsTrigger>
+          <TabsTrigger value="streaks" className="flex-1 sm:flex-none text-xs sm:text-sm">Streaks</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
