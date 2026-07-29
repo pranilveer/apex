@@ -89,69 +89,28 @@ export default function DashboardPage() {
       </motion.div>
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Tasks Done</p>
-                  <p className="text-2xl font-bold">{completedCount}/{tasks.length}</p>
+        {[
+          { label: "Tasks Done", value: `${completedCount}/${tasks.length}`, icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10", delay: 0.1 },
+          { label: "Time Spent", value: `${Math.floor(totalTime / 60)}h ${totalTime % 60}m`, icon: Clock, color: "text-blue-400", bg: "bg-blue-400/10", delay: 0.15 },
+          { label: "LeetCode Streak", value: "0 Days", icon: Flame, color: "text-yellow-400", bg: "bg-yellow-400/10", delay: 0.2 },
+          { label: "Level", value: "Lv. 0", icon: Zap, color: "text-purple-400", bg: "bg-purple-400/10", delay: 0.25 },
+        ].map((stat) => (
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: stat.delay }}>
+            <Card className="glass-hover h-full">
+              <CardContent className="p-4 h-full">
+                <div className="flex items-center justify-between h-full">
+                  <div>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </div>
+                  <div className={`h-10 w-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  </div>
                 </div>
-                <div className="h-10 w-10 rounded-lg bg-green-400/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Time Spent</p>
-                  <p className="text-2xl font-bold">{Math.floor(totalTime / 60)}h {totalTime % 60}m</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-blue-400/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">LeetCode Streak</p>
-                  <p className="text-2xl font-bold">0 Days</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-yellow-400/10 flex items-center justify-center">
-                  <Flame className="h-5 w-5 text-yellow-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Level</p>
-                  <p className="text-2xl font-bold">Lv. 0</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-purple-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       <Card>
