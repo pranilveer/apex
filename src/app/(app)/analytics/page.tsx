@@ -1,24 +1,26 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { BarChart3, TrendingUp, Clock, Brain, Code2, Dumbbell, Flame, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, Radar, AreaChart, Area, PieChart, Pie, Cell } from "recharts"
+import { fetchAnalytics, type AnalyticsData } from "@/actions"
 
-const weeklyData: { day: string; study: number; coding: number; office: number; gym: number }[] = []
+const COLORS: Record<string, string> = {
+  Gym: "#22c55e", Office: "#3b82f6", LeetCode: "#eab308",
+  Reading: "#f97316", Journal: "#ec4899", Project: "#06b6d4",
+}
 
-const monthlyData: { day: number; studyHours: number; codingHours: number; gymMinutes: number }[] = []
-
-const radarData: { skill: string; value: number }[] = []
-
-const heatmapData: { date: string; count: number }[] = []
-
-const productivityData: { week: string; productivity: number }[] = []
-
-const pieData: { name: string; value: number; color: string }[] = []
+const defaultData: AnalyticsData = {
+  weeklyData: [],
+  monthlyData: [],
+  radarData: [],
+  heatmapData: [],
+  productivityData: [],
+  pieData: [],
+}
 
 const getHeatColor = (count: number) => {
   if (count === 0) return "bg-secondary"
@@ -30,11 +32,17 @@ const getHeatColor = (count: number) => {
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState("weekly")
+  const [data, setData] = useState<AnalyticsData>(defaultData)
+  const [loaded, setLoaded] = useState(false)
 
-  const totalStudy = weeklyData.reduce((sum, d) => sum + d.study, 0)
-  const totalCoding = weeklyData.reduce((sum, d) => sum + d.coding, 0)
-  const totalOffice = weeklyData.reduce((sum, d) => sum + d.office, 0)
-  const totalGym = weeklyData.reduce((sum, d) => sum + d.gym, 0)
+  useEffect(() => {
+    fetchAnalytics().then((d) => { setData(d); setLoaded(true) })
+  }, [])
+
+  const totalStudy = data.weeklyData.reduce((sum, d) => sum + d.study, 0)
+  const totalCoding = data.weeklyData.reduce((sum, d) => sum + d.coding, 0)
+  const totalOffice = data.weeklyData.reduce((sum, d) => sum + d.office, 0)
+  const totalGym = data.weeklyData.reduce((sum, d) => sum + d.gym, 0)
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -57,14 +65,14 @@ export default function AnalyticsPage() {
           { label: "Gym Sessions", value: `${totalGym}h`, icon: Dumbbell, color: "text-green-400", bg: "bg-green-400/10" },
         ].map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <Card className="glass-hover">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
+            <Card className="glass-hover h-full">
+              <CardContent className="p-4 flex items-center gap-3 h-full">
+                <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <div className="min-w-0">
+                  <p className="text-2xl font-bold truncate">{loaded ? stat.value : "—"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -86,7 +94,7 @@ export default function AnalyticsPage() {
               <CardHeader><CardTitle className="text-base">Weekly Productivity</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={weeklyData}>
+                  <BarChart data={data.weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                     <XAxis dataKey="day" stroke="#71717a" fontSize={12} />
                     <YAxis stroke="#71717a" fontSize={12} />
@@ -103,7 +111,7 @@ export default function AnalyticsPage() {
               <CardHeader><CardTitle className="text-base">Monthly Trend</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={monthlyData}>
+                  <AreaChart data={data.monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                     <XAxis dataKey="day" stroke="#71717a" fontSize={12} />
                     <YAxis stroke="#71717a" fontSize={12} />
@@ -122,29 +130,31 @@ export default function AnalyticsPage() {
               <CardContent className="flex items-center justify-center">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
-                      {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    <Pie data={data.pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
+                      {data.pieData.filter((d) => d.value > 0).map((entry) => <Cell key={entry.name} fill={COLORS[entry.name] || "#8b5cf6"} />)}
                     </Pie>
                     <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
-              <div className="flex flex-wrap justify-center gap-3 pb-4">
-                {pieData.map((d) => (
-                  <div key={d.name} className="flex items-center gap-2 text-xs">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="font-medium">{d.value}%</span>
-                  </div>
-                ))}
-              </div>
+              {data.pieData.some((d) => d.value > 0) && (
+                <div className="flex flex-wrap justify-center gap-3 pb-4">
+                  {data.pieData.filter((d) => d.value > 0).map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-xs">
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[d.name] || "#8b5cf6" }} />
+                      <span className="text-muted-foreground">{d.name}</span>
+                      <span className="font-medium">{d.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
 
             <Card>
               <CardHeader><CardTitle className="text-base">Study Hours Trend</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={weeklyData}>
+                  <LineChart data={data.weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                     <XAxis dataKey="day" stroke="#71717a" fontSize={12} />
                     <YAxis stroke="#71717a" fontSize={12} />
@@ -163,8 +173,8 @@ export default function AnalyticsPage() {
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Flame className="h-4 w-4 text-orange-400" />Learning Heatmap (Last 90 Days)</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-13 gap-1">
-                {heatmapData.map((d) => (
-                  <div key={d.date} className={`h-4 w-full rounded-sm ${getHeatColor(d.count)} heatmap-cell`} title={`${d.date}: ${d.count} hours`} />
+                {data.heatmapData.map((d) => (
+                  <div key={d.date} className={`h-4 w-full rounded-sm ${getHeatColor(d.count)} heatmap-cell`} title={`${d.date}: ${d.count} tasks`} />
                 ))}
               </div>
               <div className="flex items-center justify-end gap-2 mt-3 text-xs text-muted-foreground">
@@ -181,7 +191,7 @@ export default function AnalyticsPage() {
             <CardHeader><CardTitle className="text-base">Skill Radar</CardTitle></CardHeader>
             <CardContent className="flex justify-center">
               <ResponsiveContainer width="100%" height={400}>
-                <RadarChart data={radarData}>
+                <RadarChart data={data.radarData}>
                   <PolarGrid stroke="#27272a" />
                   <PolarAngleAxis dataKey="skill" stroke="#71717a" fontSize={12} />
                   <Radar name="Skills" dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.2} strokeWidth={2} />
@@ -197,7 +207,7 @@ export default function AnalyticsPage() {
               <CardHeader><CardTitle className="text-base">Weekly Productivity Score</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={productivityData}>
+                  <LineChart data={data.productivityData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                     <XAxis dataKey="week" stroke="#71717a" fontSize={12} />
                     <YAxis stroke="#71717a" fontSize={12} domain={[0, 100]} />
@@ -216,7 +226,11 @@ export default function AnalyticsPage() {
                     <div key={i} className="text-center text-xs text-muted-foreground py-1">{d}</div>
                   ))}
                   {Array.from({ length: 28 }, (_, i) => {
-                    const active = false
+                    const date = new Date()
+                    date.setDate(date.getDate() - 27 + i)
+                    const dateStr = date.toISOString().split("T")[0]
+                    const entry = data.heatmapData.find((h) => h.date === dateStr)
+                    const active = entry ? entry.count > 0 : false
                     return (
                       <div key={i} className={`h-8 w-full rounded-md flex items-center justify-center text-xs ${active ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}>
                         {active && <Flame className="h-3 w-3" />}
