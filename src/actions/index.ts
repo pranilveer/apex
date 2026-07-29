@@ -216,8 +216,6 @@ export async function toggleDailyTask(taskId: string, completed: boolean) {
 }
 
 export async function registerUser(data: { name: string; email: string; password: string }) {
-
-export async function registerUser(data: { name: string; email: string; password: string }) {
   const { name, email, password } = data
 
   if (!name || !email || !password) {
