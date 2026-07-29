@@ -59,13 +59,17 @@ export async function getCollection(name: string) {
 export async function findMany<T>(collection: string, query: Record<string, unknown> = {}): Promise<T[]> {
   const userId = await getUserId()
   const col = await getCollection(collection)
-  return col.find({ userId, ...query }).sort({ _id: -1 }).toArray() as unknown as T[]
+  const docs = await col.find({ userId, ...query }).sort({ _id: -1 }).toArray()
+  return docs.map(({ _id, ...rest }) => rest) as unknown as T[]
 }
 
 export async function findOne<T>(collection: string, query: Record<string, unknown> = {}): Promise<T | null> {
   const userId = await getUserId()
   const col = await getCollection(collection)
-  return col.findOne({ userId, ...query }) as unknown as T | null
+  const doc = await col.findOne({ userId, ...query })
+  if (!doc) return null
+  const { _id, ...rest } = doc as unknown as Record<string, unknown>
+  return rest as unknown as T
 }
 
 export async function insertOne(collection: string, doc: Record<string, unknown>): Promise<string> {

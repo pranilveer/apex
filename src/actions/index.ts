@@ -235,7 +235,7 @@ export interface AnalyticsData {
 export async function fetchAnalytics(): Promise<AnalyticsData> {
   const userId = await getUserId()
   const db = await (await import("@/lib/mongodb")).getDb()
-  const tasks = await db.collection("daily_tasks").find({ userId }).toArray()
+  const tasks = (await db.collection("daily_tasks").find({ userId }).toArray()).map(({ _id, ...rest }) => rest)
 
   const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   const now = new Date()
