@@ -205,13 +205,14 @@ export async function saveDailyTasks(tasks: import("@/types").DailyTask[]) {
   }
 }
 
-export async function toggleDailyTask(taskId: string, completed: boolean) {
+export async function toggleDailyTask(taskId: string, completed: boolean, label: string, timeSpent: number, notes: string) {
   const date = getTodayDateString()
   const userId = await getUserId()
   const db = await (await import("@/lib/mongodb")).getDb()
   await db.collection("daily_tasks").updateOne(
     { userId, date, id: taskId },
-    { $set: { completed, updatedAt: new Date().toISOString() } }
+    { $set: { label, completed, timeSpent, notes, updatedAt: new Date().toISOString() } },
+    { upsert: true }
   )
 }
 

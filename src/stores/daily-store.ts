@@ -56,6 +56,8 @@ export const useDailyStore = create<DailyState>((set, get) => ({
         }))
         set({ tasks: mapped, loaded: true })
       } else {
+        const { tasks } = get()
+        await saveDailyTasks(tasks.map((t) => ({ ...t, date: "" })))
         set({ loaded: true })
       }
     } catch {
@@ -78,7 +80,7 @@ export const useDailyStore = create<DailyState>((set, get) => ({
         t.id === taskId ? { ...t, completed } : t
       ),
     })
-    toggleDailyTask(taskId, completed)
+    toggleDailyTask(taskId, completed, task.label, task.timeSpent, task.notes)
   },
 
   updateTask: (taskId, updates) => {
