@@ -1,53 +1,86 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion } from "framer-motion"
-import { Zap, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Check } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { registerUser } from "@/actions"
 
-const signInSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-})
+const signUpSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
 
-type SignInForm = z.infer<typeof signInSchema>
+type SignUpForm = z.infer<typeof signUpSchema>
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignInForm>({
-    resolver: zodResolver(signInSchema),
+  } = useForm<SignUpForm>({
+    resolver: zodResolver(signUpSchema),
   })
 
-  const onSubmit = async (data: SignInForm) => {
+  const onSubmit = async (data: SignUpForm) => {
     setError("")
-    const result = await signIn("credentials", {
+    const result = await registerUser({
+      name: data.name,
       email: data.email,
       password: data.password,
-      redirect: false,
     })
 
-    if (result?.error) {
-      setError("Invalid email or password")
+    if (result.error) {
+      setError(result.error)
     } else {
-      router.push("/")
-      router.refresh()
+      setSuccess(true)
+      setTimeout(() => router.push("/auth/signin"), 2000)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md"
+        >
+          <Card className="glass border-border/50 text-center">
+            <CardContent className="pt-8 pb-8">
+              <div className="mx-auto h-16 w-16 rounded-full bg-green-400/10 flex items-center justify-center mb-4">
+                <Check className="h-8 w-8 text-green-400" />
+              </div>
+              <CardTitle className="text-2xl mb-2">Account Created!</CardTitle>
+              <CardDescription className="text-base">
+                Redirecting you to sign in...
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
@@ -70,8 +103,8 @@ export default function SignInPage() {
 
         <Card className="glass border-border/50">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-            <CardDescription>Sign in to your DailyTracker account</CardDescription>
+            <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+            <CardDescription>Start tracking your daily progress</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-5 pt-4">
@@ -85,6 +118,23 @@ export default function SignInPage() {
                   {error}
                 </motion.p>
               )}
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    className="pl-10"
+                    {...register("name")}
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-xs text-red-400 mt-1">{errors.name.message}</p>
+                )}
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -104,15 +154,13 @@ export default function SignInPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder="Min. 6 characters"
                     className="pl-10 pr-10"
                     {...register("password")}
                   />
@@ -130,15 +178,40 @@ export default function SignInPage() {
                 )}
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repeat your password"
+                    className="pl-10 pr-10"
+                    {...register("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-400 mt-1">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
               <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Signing in...
+                    Creating account...
                   </span>
                 ) : (
                   <>
-                    Sign In
+                    Create Account
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </>
                 )}
@@ -150,13 +223,13 @@ export default function SignInPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">New here?</span>
+                <span className="bg-card px-2 text-muted-foreground">Already have an account?</span>
               </div>
             </div>
 
-            <Link href="/auth/signup">
+            <Link href="/auth/signin">
               <Button variant="outline" className="w-full" size="lg">
-                Create an account
+                Sign in instead
               </Button>
             </Link>
           </CardContent>

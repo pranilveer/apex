@@ -1,11 +1,54 @@
 import { getDb } from "@/lib/mongodb"
 import { auth } from "@/lib/auth"
 import { ObjectId } from "mongodb"
+import { cookies } from "next/headers"
+import { getToken, decode } from "@auth/core/jwt"
 
 export async function getUserId(): Promise<string> {
-  const session = await auth()
-  if (!session?.user?.id) throw new Error("Unauthorized")
-  return session.user.id
+  try {
+    const session = await auth()
+    if (session?.user?.id) return session.user.id
+  } catch {
+    // auth() threw, fall through to fallback
+  }
+
+  const cookieStore = await cookies()
+  const cookieHeader = Array.from(cookieStore)
+    .map(([, c]) => `${c.name}=${c.value}`)
+    .join("; ")
+
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+  if (!secret) throw new Error("Missing AUTH_SECRET")
+
+  // Some Next.js versions strip Cookie from headers() in Server Actions,
+  // so we build the cookie header from cookies() instead.
+  const parsed = await getToken({
+    req: { headers: { cookie: cookieHeader } },
+    secret,
+  })
+  if (parsed?.id) return parsed.id as string
+
+  // If non-secure didn't work, try with secure cookie prefix
+  const parsedSecure = await getToken({
+    req: { headers: { cookie: cookieHeader } },
+    secret,
+    secureCookie: true,
+  })
+  if (parsedSecure?.id) return parsedSecure.id as string
+
+  // Final fallback: try decoding the JWT directly with the cookie name as salt
+  const token = cookieStore.get("authjs.session-token")
+    ?? cookieStore.get("__Secure-authjs.session-token")
+  if (token) {
+    for (const salt of ["authjs.session-token", "__Secure-authjs.session-token"]) {
+      try {
+        const decoded = await decode({ token: token.value, secret, salt })
+        if (decoded?.id) return decoded.id as string
+      } catch {}
+    }
+  }
+
+  throw new Error("Unauthorized")
 }
 
 export async function getCollection(name: string) {

@@ -180,3 +180,38 @@ export async function fetchGamificationData() {
   const data = await findOne<import("@/types").GamificationData>("gamification")
   return data
 }
+
+export async function registerUser(data: { name: string; email: string; password: string }) {
+  const { name, email, password } = data
+
+  if (!name || !email || !password) {
+    return { error: "All fields are required" }
+  }
+
+  if (password.length < 6) {
+    return { error: "Password must be at least 6 characters" }
+  }
+
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const existing = await db.collection("users").findOne({ email })
+  if (existing) {
+    return { error: "Email already in use" }
+  }
+
+  const bcrypt = await import("bcryptjs")
+  const hashedPassword = await bcrypt.hash(password, 12)
+
+  const result = await db.collection("users").insertOne({
+    name,
+    email,
+    password: hashedPassword,
+    emailVerified: null,
+    image: null,
+    createdAt: new Date(),
+  })
+
+  return {
+    success: true,
+    id: result.insertedId.toString(),
+  }
+}
