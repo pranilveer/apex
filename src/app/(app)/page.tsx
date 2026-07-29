@@ -114,13 +114,13 @@ export default function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-1 md:pb-3">
           <div className="flex items-center justify-between">
             <CardTitle>Daily Progress</CardTitle>
             <span className="text-sm text-muted-foreground">{completionPct}%</span>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4 md:pt-2">
           <Progress value={completionPct} className="h-2" />
         </CardContent>
       </Card>
