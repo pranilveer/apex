@@ -1,6 +1,7 @@
 "use client"
 import { usePathname } from "next/navigation"
-import { Search, Command, Maximize2, Menu, Moon, Sun } from "lucide-react"
+import { Search, Command, Maximize2, Menu, Moon, Sun, LogOut } from "lucide-react"
+import { signOut } from "next-auth/react"
 import { useTheme } from "@/components/layout/providers"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/app-store"
@@ -72,6 +73,15 @@ export function Header() {
         </Button>
         <Button variant="ghost" size="icon" onClick={toggleFocusMode} className="h-9 w-9">
           <Maximize2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          className="h-9 w-9 text-muted-foreground hover:text-destructive"
+          title="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
         </Button>
       </div>
     </header>
