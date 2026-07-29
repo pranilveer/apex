@@ -181,6 +181,42 @@ export async function fetchGamificationData() {
   return data
 }
 
+function getTodayDateString(): string {
+  return new Date().toISOString().split("T")[0]
+}
+
+export async function fetchDailyTasks() {
+  const date = getTodayDateString()
+  const items = await findMany<import("@/types").DailyTask>("daily_tasks", { date })
+  return items
+}
+
+export async function saveDailyTasks(tasks: import("@/types").DailyTask[]) {
+  const date = getTodayDateString()
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const col = db.collection("daily_tasks")
+
+  await col.deleteMany({ userId, date })
+  if (tasks.length > 0) {
+    await col.insertMany(
+      tasks.map((t) => ({ ...t, userId, date }))
+    )
+  }
+}
+
+export async function toggleDailyTask(taskId: string, completed: boolean) {
+  const date = getTodayDateString()
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  await db.collection("daily_tasks").updateOne(
+    { userId, date, id: taskId },
+    { $set: { completed, updatedAt: new Date().toISOString() } }
+  )
+}
+
+export async function registerUser(data: { name: string; email: string; password: string }) {
+
 export async function registerUser(data: { name: string; email: string; password: string }) {
   const { name, email, password } = data
 

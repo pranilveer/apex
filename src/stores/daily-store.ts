@@ -1,5 +1,6 @@
 "use client"
 import { create } from 'zustand'
+import { fetchDailyTasks, saveDailyTasks, toggleDailyTask } from "@/actions"
 
 export interface DailyTaskItem {
   id: string
@@ -11,12 +12,14 @@ export interface DailyTaskItem {
 
 interface DailyState {
   tasks: DailyTaskItem[]
+  loaded: boolean
   selectedDate: Date
   setTasks: (tasks: DailyTaskItem[]) => void
   toggleTask: (taskId: string) => void
   updateTask: (taskId: string, updates: Partial<DailyTaskItem>) => void
   setSelectedDate: (date: Date) => void
   getCompletionPercentage: () => number
+  loadTasks: () => Promise<void>
 }
 
 const defaultTasks: DailyTaskItem[] = [
@@ -37,21 +40,58 @@ const defaultTasks: DailyTaskItem[] = [
 
 export const useDailyStore = create<DailyState>((set, get) => ({
   tasks: defaultTasks,
+  loaded: false,
   selectedDate: new Date(),
-  setTasks: (tasks) => set({ tasks }),
-  toggleTask: (taskId) =>
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
+
+  loadTasks: async () => {
+    try {
+      const serverTasks = await fetchDailyTasks()
+      if (serverTasks.length > 0) {
+        const mapped: DailyTaskItem[] = serverTasks.map((t) => ({
+          id: t.id,
+          label: t.label,
+          completed: t.completed,
+          timeSpent: t.timeSpent,
+          notes: t.notes,
+        }))
+        set({ tasks: mapped, loaded: true })
+      } else {
+        set({ loaded: true })
+      }
+    } catch {
+      set({ loaded: true })
+    }
+  },
+
+  setTasks: (tasks) => {
+    set({ tasks })
+    saveDailyTasks(tasks.map((t) => ({ ...t, date: "" })))
+  },
+
+  toggleTask: (taskId) => {
+    const { tasks } = get()
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+    const completed = !task.completed
+    set({
+      tasks: tasks.map((t) =>
+        t.id === taskId ? { ...t, completed } : t
       ),
-    })),
-  updateTask: (taskId, updates) =>
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskId ? { ...task, ...updates } : task
-      ),
-    })),
+    })
+    toggleDailyTask(taskId, completed)
+  },
+
+  updateTask: (taskId, updates) => {
+    const { tasks } = get()
+    const updated = tasks.map((t) =>
+      t.id === taskId ? { ...t, ...updates } : t
+    )
+    set({ tasks: updated })
+    saveDailyTasks(updated.map((t) => ({ ...t, date: "" })))
+  },
+
   setSelectedDate: (date) => set({ selectedDate: date }),
+
   getCompletionPercentage: () => {
     const { tasks } = get()
     const completed = tasks.filter((t) => t.completed).length

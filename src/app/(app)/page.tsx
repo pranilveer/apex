@@ -59,14 +59,15 @@ const item = {
 }
 
 export default function DashboardPage() {
-  const { tasks, toggleTask, getCompletionPercentage } = useDailyStore()
+  const { tasks, toggleTask, getCompletionPercentage, loadTasks } = useDailyStore()
   const completionPct = getCompletionPercentage()
   const completedCount = tasks.filter((t) => t.completed).length
   const totalTime = tasks.reduce((sum, t) => sum + t.timeSpent, 0)
   const [dateStr, setDateStr] = useState("")
   useEffect(() => {
     setDateStr(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }))
-  }, [])
+    loadTasks()
+  }, [loadTasks])
 
   return (
     <div className="space-y-4 md:space-y-6">
