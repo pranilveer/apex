@@ -43,9 +43,9 @@ export function Header() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="min-w-0">
-          <h1 className="text-base font-semibold md:text-xl truncate">{title}</h1>
-          <p className="text-xs text-muted-foreground hidden sm:block">{getGreeting()}</p>
+        <div className="min-w-0 hidden md:block">
+          <h1 className="text-xl font-semibold truncate">{title}</h1>
+          <p className="text-xs text-muted-foreground">{getGreeting()}</p>
         </div>
       </div>
       <div className="flex items-center gap-1 md:gap-2 shrink-0">
