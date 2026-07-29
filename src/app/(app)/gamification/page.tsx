@@ -36,73 +36,45 @@ export default function GamificationPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
-          <Card className="glass-hover overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent" />
-            <CardContent className="p-5 relative">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-14 w-14 rounded-2xl bg-primary/20 flex items-center justify-center">
-                  <Crown className="h-7 w-7 text-primary" />
+        {[
+          { icon: Crown, label: "Level", value: `Lv. ${data.level}`, sub: `Level ${data.level}`, color: "primary", delay: 0, gradient: "from-purple-500/10" },
+          { icon: Zap, label: "Total XP", value: data.xp.toLocaleString(), sub: "Total XP", color: "yellow-400", delay: 0.1 },
+          { icon: Flame, label: "Current Streak", value: `${data.currentStreak} days`, sub: "Current Streak", color: "orange-400", delay: 0.2 },
+          { icon: TrendingUp, label: "Daily Score", value: `${data.dailyScore}%`, sub: "Daily Score", color: "green-400", delay: 0.3 },
+        ].map((item) => (
+          <motion.div key={item.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: item.delay }}>
+            <Card className={`glass-hover h-full ${item.gradient ? "overflow-hidden relative" : ""}`}>
+              {item.gradient && <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} to-transparent`} />}
+              <CardContent className="p-5 relative flex items-center gap-3">
+                <div className={`h-12 w-12 rounded-xl bg-${item.color}/10 flex items-center justify-center shrink-0`}>
+                  <item.icon className={`h-6 w-6 text-${item.color}`} />
                 </div>
-                <div>
-                  <p className="text-3xl font-bold">Lv. {data.level}</p>
-                  <p className="text-xs text-muted-foreground">Level {data.level}</p>
+                <div className="min-w-0">
+                  <p className="text-2xl font-bold truncate">{item.value}</p>
+                  <p className="text-xs text-muted-foreground truncate">{item.sub}</p>
                 </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Crown className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between text-sm mb-1">
+                <span className="text-muted-foreground">XP Progress</span>
+                <span className="font-medium">{currentLevelXP}/100 XP</span>
               </div>
               <Progress value={xpProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-2">{currentLevelXP}/100 XP to next level</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-yellow-400/10 flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{data.xp.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Total XP</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-orange-400/10 flex items-center justify-center">
-                  <Flame className="h-6 w-6 text-orange-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{data.currentStreak} days</p>
-                  <p className="text-xs text-muted-foreground">Current Streak</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card className="glass-hover">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-green-400/10 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{data.dailyScore}%</p>
-                  <p className="text-xs text-muted-foreground">Daily Score</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

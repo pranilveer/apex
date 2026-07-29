@@ -20,14 +20,12 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="w-full min-w-[380px] md:min-w-0">
-            <TabsTrigger value="profile" className="gap-1 sm:gap-2 text-xs sm:text-sm"><User className="h-3 w-3 sm:h-4 sm:w-4" />Profile</TabsTrigger>
-            <TabsTrigger value="appearance" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Palette className="h-3 w-3 sm:h-4 sm:w-4" />Appearance</TabsTrigger>
-            <TabsTrigger value="shortcuts" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Keyboard className="h-3 w-3 sm:h-4 sm:w-4" />Shortcuts</TabsTrigger>
-            <TabsTrigger value="data" className="gap-1 sm:gap-2 text-xs sm:text-sm"><Database className="h-3 w-3 sm:h-4 sm:w-4" />Data</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList className="w-full flex-wrap h-auto min-h-10 gap-1">
+          <TabsTrigger value="profile" className="flex-1 sm:flex-none gap-1 sm:gap-2 text-xs sm:text-sm"><User className="h-3 w-3 sm:h-4 sm:w-4" />Profile</TabsTrigger>
+          <TabsTrigger value="appearance" className="flex-1 sm:flex-none gap-1 sm:gap-2 text-xs sm:text-sm"><Palette className="h-3 w-3 sm:h-4 sm:w-4" />Appearance</TabsTrigger>
+          <TabsTrigger value="shortcuts" className="hidden sm:inline-flex gap-1 sm:gap-2 text-xs sm:text-sm"><Keyboard className="h-3 w-3 sm:h-4 sm:w-4" />Shortcuts</TabsTrigger>
+          <TabsTrigger value="data" className="flex-1 sm:flex-none gap-1 sm:gap-2 text-xs sm:text-sm"><Database className="h-3 w-3 sm:h-4 sm:w-4" />Data</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
           <Card>
@@ -87,7 +85,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="shortcuts" className="space-y-4">
+        <TabsContent value="shortcuts" className="hidden sm:block space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-base">Keyboard Shortcuts</CardTitle></CardHeader>
             <CardContent className="space-y-2">
