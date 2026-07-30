@@ -1,6 +1,7 @@
 "use server"
 
 import { getUserId, findMany, findOne, insertOne, updateOne, deleteOne, replaceOne } from "@/lib/db-actions"
+import { generateId } from "@/lib/utils"
 
 export async function fetchGoals() {
   const items = await findMany<import("@/types").Goal>("goals")
@@ -90,12 +91,160 @@ export async function addJob(data: import("@/types").JobApplication) {
   return insertOne("jobs", rest)
 }
 
+export async function updateJob(id: string, data: Partial<import("@/types").JobApplication>) {
+  await updateOne("jobs", id, data as unknown as Record<string, unknown>)
+}
+
 export async function updateJobStatus(id: string, status: string) {
   await updateOne("jobs", id, { status } as unknown as Record<string, unknown>)
 }
 
 export async function deleteJob(id: string) {
   await deleteOne("jobs", id)
+}
+
+export async function addStatusHistory(jobId: string, entry: import("@/types").StatusHistoryEntry) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  await db.collection("jobs").updateOne(
+    { _id: new ObjectId(jobId), userId },
+    { $push: { statusHistory: entry }, $set: { updatedAt: new Date().toISOString() } } as any
+  )
+}
+
+export async function addInterview(jobId: string, interview: import("@/types").Interview) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  await db.collection("jobs").updateOne(
+    { _id: new ObjectId(jobId), userId },
+    { $push: { interviews: interview }, $set: { updatedAt: new Date().toISOString() } } as any
+  )
+}
+
+export async function updateInterview(jobId: string, interviewId: string, data: Partial<import("@/types").Interview>) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() }
+  for (const [key, val] of Object.entries(data)) {
+    updates[`interviews.$.${key}`] = val
+  }
+  await db.collection("jobs").updateOne(
+    { _id: new ObjectId(jobId), userId, "interviews.id": interviewId },
+    { $set: updates } as any
+  )
+}
+
+export async function deleteInterview(jobId: string, interviewId: string) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  await db.collection("jobs").updateOne(
+    { _id: new ObjectId(jobId), userId },
+    { $pull: { interviews: { id: interviewId } }, $set: { updatedAt: new Date().toISOString() } } as any
+  )
+}
+
+export async function addFollowUp(jobId: string, followUp: import("@/types").FollowUp) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  await db.collection("jobs").updateOne(
+    { _id: new ObjectId(jobId), userId },
+    { $push: { followUps: followUp }, $set: { updatedAt: new Date().toISOString() } } as any
+  )
+}
+
+export async function updateFollowUp(jobId: string, followUpId: string, data: Partial<import("@/types").FollowUp>) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  await db.collection("jobs").updateOne(
+    { _id: new ObjectId(jobId), userId, "followUps.id": followUpId },
+    { $set: Object.entries(data).reduce((acc, [key, val]) => ({ ...acc, [`followUps.$.${key}`]: val }), { updatedAt: new Date().toISOString() as string } as Record<string, unknown>) } as any
+  )
+}
+
+export async function fetchWishlist() {
+  const items = await findMany<import("@/types").WishlistCompany>("wishlist")
+  return items
+}
+
+export async function addWishlist(data: import("@/types").WishlistCompany) {
+  const rest = { ...data } as unknown as Record<string, unknown>
+  delete rest.id
+  return insertOne("wishlist", rest)
+}
+
+export async function updateWishlist(id: string, data: Partial<import("@/types").WishlistCompany>) {
+  await updateOne("wishlist", id, data as unknown as Record<string, unknown>)
+}
+
+export async function deleteWishlist(id: string) {
+  await deleteOne("wishlist", id)
+}
+
+export async function fetchJobGoals() {
+  const items = await findMany<import("@/types").JobGoal>("job_goals")
+  return items
+}
+
+export async function addJobGoal(data: import("@/types").JobGoal) {
+  const rest = { ...data } as unknown as Record<string, unknown>
+  delete rest.id
+  return insertOne("job_goals", rest)
+}
+
+export async function updateJobGoal(id: string, data: Partial<import("@/types").JobGoal>) {
+  await updateOne("job_goals", id, data as unknown as Record<string, unknown>)
+}
+
+export async function deleteJobGoal(id: string) {
+  await deleteOne("job_goals", id)
+}
+
+export async function fetchInterviewLearnings() {
+  const items = await findMany<import("@/types").InterviewLearning>("interview_learnings")
+  return items
+}
+
+export async function addInterviewLearning(data: import("@/types").InterviewLearning) {
+  const rest = { ...data } as unknown as Record<string, unknown>
+  delete rest.id
+  return insertOne("interview_learnings", rest)
+}
+
+export async function deleteInterviewLearning(id: string) {
+  await deleteOne("interview_learnings", id)
+}
+
+export async function duplicateJob(id: string) {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const { ObjectId } = await import("mongodb")
+  const original = await db.collection("jobs").findOne({ _id: new ObjectId(id), userId })
+  if (!original) throw new Error("Job not found")
+  const { _id, ...rest } = original as unknown as Record<string, unknown>
+  const dup = { ...rest, id: generateId(), appliedDate: new Date().toISOString().split("T")[0], status: "applied", statusHistory: [], interviews: [], followUps: [], archived: false, createdAt: new Date().toISOString() }
+  await db.collection("jobs").insertOne(dup)
+}
+
+export async function archiveJob(id: string) {
+  await updateOne("jobs", id, { archived: true } as unknown as Record<string, unknown>)
+}
+
+export async function exportJobsCSV() {
+  const jobs = await fetchJobs()
+  const headers = ["Company", "Role", "Status", "Applied Date", "Location", "Work Mode", "Source", "Expected Salary", "Offered Salary", "Recruiter Name", "Recruiter Email", "Notes"]
+  const rows = jobs.map((j) => [j.company, j.role, j.status, j.appliedDate, j.location, j.workMode, j.source, j.expectedSalary.toString(), j.salaryOffered.toString(), j.recruiterName, j.recruiterEmail, `"${j.notes.replace(/"/g, '""')}"`])
+  return [headers, ...rows].map((r) => r.join(",")).join("\n")
+}
+
+export async function exportJobsJSON() {
+  const jobs = await fetchJobs()
+  return JSON.stringify(jobs, null, 2)
 }
 
 export async function fetchResumes() {

@@ -64,6 +64,32 @@ export interface ProjectTask {
   status: "todo" | "in-progress" | "done"
 }
 
+export interface StatusHistoryEntry {
+  status: string
+  date: string
+  notes?: string
+}
+
+export interface Interview {
+  id: string
+  date: string
+  time: string
+  type: string
+  mode: "online" | "offline"
+  meetingLink: string
+  roundNumber: number
+  interviewerName: string
+  reminder: boolean
+  notes: string
+}
+
+export interface FollowUp {
+  id: string
+  date: string
+  notes: string
+  completed: boolean
+}
+
 export interface JobApplication {
   id: string
   company: string
@@ -74,6 +100,59 @@ export interface JobApplication {
   salaryOffered: number
   expectedSalary: number
   notes: string
+  location: string
+  workMode: "remote" | "hybrid" | "onsite" | ""
+  source: string
+  jobUrl: string
+  recruiterName: string
+  recruiterEmail: string
+  recruiterLinkedIn: string
+  resumeVersion: string
+  coverLetter: string
+  portfolioUrl: string
+  githubUrl: string
+  linkedInUrl: string
+  interviewNotes: string
+  archived: boolean
+  statusHistory: StatusHistoryEntry[]
+  interviews: Interview[]
+  followUps: FollowUp[]
+}
+
+export interface WishlistCompany {
+  id: string
+  company: string
+  role: string
+  priority: "low" | "medium" | "high" | "dream"
+  notes: string
+  applicationDeadline: string
+  applied: boolean
+  jobLink: string
+}
+
+export interface JobGoal {
+  id: string
+  type: "daily" | "weekly" | "monthly"
+  target: number
+  current: number
+}
+
+export interface InterviewLearning {
+  id: string
+  jobId: string
+  questionsAsked: string
+  mistakes: string
+  topicsToRevise: string
+  difficulty: "easy" | "medium" | "hard"
+  confidenceRating: number
+  date: string
+}
+
+export interface ApplicationStreak {
+  currentStreak: number
+  longestStreak: number
+  missedDays: number
+  heatmapData: { date: string; count: number }[]
 }
 
 export interface Resume {
