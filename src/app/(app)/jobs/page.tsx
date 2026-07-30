@@ -276,30 +276,30 @@ export default function JobsPage() {
             <DialogContent className="glass border-border/50 max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader><DialogTitle>New Application</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Company *</Label><Input value={newJob.company} onChange={(e) => setNewJob({ ...newJob, company: e.target.value })} placeholder="Google" /></div>
                   <div><Label>Role</Label><Input value={newJob.role} onChange={(e) => setNewJob({ ...newJob, role: e.target.value })} placeholder="SDE-2" /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Location</Label><Input value={newJob.location} onChange={(e) => setNewJob({ ...newJob, location: e.target.value })} placeholder="Bangalore" /></div>
                   <div><Label>Work Mode</Label><Select value={newJob.workMode} onValueChange={(v: Job["workMode"]) => setNewJob({ ...newJob, workMode: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{workModes.map((m) => <SelectItem key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</SelectItem>)}</SelectContent></Select></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Source</Label><Select value={newJob.source} onValueChange={(v) => setNewJob({ ...newJob, source: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{sources.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
                   <div><Label>Expected Salary (CTC)</Label><Input type="number" value={newJob.expectedSalary || ""} onChange={(e) => setNewJob({ ...newJob, expectedSalary: Number(e.target.value) })} placeholder="2000000" /></div>
                 </div>
                 <div><Label>Job URL</Label><Input value={newJob.jobUrl} onChange={(e) => setNewJob({ ...newJob, jobUrl: e.target.value })} placeholder="https://..." /></div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Recruiter Name</Label><Input value={newJob.recruiterName} onChange={(e) => setNewJob({ ...newJob, recruiterName: e.target.value })} /></div>
                   <div><Label>Recruiter Email</Label><Input type="email" value={newJob.recruiterEmail} onChange={(e) => setNewJob({ ...newJob, recruiterEmail: e.target.value })} /></div>
                 </div>
                 <div><Label>Recruiter LinkedIn</Label><Input value={newJob.recruiterLinkedIn} onChange={(e) => setNewJob({ ...newJob, recruiterLinkedIn: e.target.value })} /></div>
                 <Separator />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Resume Version</Label><Input value={newJob.resumeVersion} onChange={(e) => setNewJob({ ...newJob, resumeVersion: e.target.value })} placeholder="v2.1" /></div>
                   <div><Label>Cover Letter</Label><Input value={newJob.coverLetter} onChange={(e) => setNewJob({ ...newJob, coverLetter: e.target.value })} /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Portfolio URL</Label><Input value={newJob.portfolioUrl} onChange={(e) => setNewJob({ ...newJob, portfolioUrl: e.target.value })} /></div>
                   <div><Label>GitHub URL</Label><Input value={newJob.githubUrl} onChange={(e) => setNewJob({ ...newJob, githubUrl: e.target.value })} /></div>
                 </div>
@@ -326,9 +326,9 @@ export default function JobsPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-1 lg:grid-cols-4">
+      <div className="grid gap-2 sm:gap-3 grid-cols-1 lg:grid-cols-4">
         <Card className="glass-hover lg:col-span-1">
-          <CardContent className="p-4 space-y-3">
+          <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Target className="h-4 w-4" />Today's Goal
             </div>
@@ -348,7 +348,7 @@ export default function JobsPage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-5 lg:col-span-2">
+        <div className="grid gap-2 sm:gap-3 grid-cols-5 lg:col-span-2">
           {[
             { label: "Today", count: stats.today, color: "text-violet-400", icon: Zap },
             { label: "Yesterday", count: stats.yesterday, color: "text-blue-400", icon: Clock },
@@ -357,11 +357,11 @@ export default function JobsPage() {
             { label: "Total", count: stats.total, color: "text-primary", icon: Briefcase },
           ].map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="glass-hover h-full">
-                <CardContent className="p-3 text-center">
-                  <s.icon className={`h-5 w-5 mx-auto mb-1 ${s.color}`} />
-                  <p className="text-xl font-bold">{s.count}</p>
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <Card className="glass-hover h-full">
+                <CardContent className="p-2 sm:p-3 text-center">
+                  <s.icon className={`h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-0.5 sm:mb-1 ${s.color}`} />
+                  <p className="text-base sm:text-xl font-bold">{s.count}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -378,51 +378,51 @@ export default function JobsPage() {
               <div><p className="text-2xl font-bold text-yellow-400">{streak.longest}</p><p className="text-xs text-muted-foreground">Longest</p></div>
               <div><p className="text-2xl font-bold text-red-400">{streak.missedDays}</p><p className="text-xs text-muted-foreground">Missed</p></div>
             </div>
-            <div className="flex gap-0.5 justify-center flex-wrap">
+            <div className="flex gap-px sm:gap-0.5 justify-center overflow-x-auto">
               {Array.from({ length: 30 }).map((_, i) => {
                 const d = new Date(Date.now() - (29 - i) * 86400000)
                 const ds = d.toISOString().split("T")[0]
                 const hasApp = jobs.some((j) => j.appliedDate === ds)
-                return <div key={i} className={cn("h-2 w-2 rounded-sm", hasApp ? "bg-primary" : "bg-secondary")} />
+                return <div key={i} className={cn("h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-sm shrink-0", hasApp ? "bg-primary" : "bg-secondary")} />
               })}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
+      <div className="grid grid-cols-2 sm:flex gap-2">
+        <div className="relative col-span-2 sm:flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input className="pl-9" placeholder="Search company, role..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
             {statusFlow.map((s) => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterSource} onValueChange={setFilterSource}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Source" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Source" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sources</SelectItem>
             {sources.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterWorkMode} onValueChange={setFilterWorkMode}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Work Mode" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Work Mode" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Modes</SelectItem>
             {workModes.map((m) => <SelectItem key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button variant="ghost" size="icon" onClick={() => setShowArchived(!showArchived)}>
+        <Button variant="ghost" size="icon" className="justify-self-end" onClick={() => setShowArchived(!showArchived)}>
           {showArchived ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </Button>
       </div>
 
       <Tabs defaultValue="applications" className="space-y-4">
-        <TabsList className="flex-wrap">
+        <TabsList className="flex-nowrap overflow-x-auto scrollbar-none w-full sm:flex-wrap sm:overflow-visible">
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -436,54 +436,54 @@ export default function JobsPage() {
           {filteredJobs.map((job, i) => (
             <motion.div key={job.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
               <Card className="glass-hover cursor-pointer" onClick={() => { setDetailJob(job); setDetailOpen(true) }}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary shrink-0">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center text-base sm:text-lg font-bold text-primary shrink-0">
                         {job.company.slice(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold truncate">{job.company}</p>
-                        <p className="text-sm text-muted-foreground truncate">{job.role}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge className={getStatusColor(job.status)}>{job.status}</Badge>
-                          {job.source && <Badge variant="outline" className="text-xs">{job.source}</Badge>}
-                          {job.workMode && <Badge variant="outline" className={getWorkModeColor(job.workMode)}>{job.workMode}</Badge>}
-                          <span className="text-xs text-muted-foreground">{job.appliedDate}</span>
+                        <p className="font-semibold text-sm sm:text-base truncate">{job.company}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{job.role}</p>
+                        <div className="flex items-center gap-1 sm:gap-2 mt-1 flex-wrap">
+                          <Badge className={cn(getStatusColor(job.status), "text-[10px] sm:text-xs h-5")}>{job.status}</Badge>
+                          {job.source && <Badge variant="outline" className="text-[10px] sm:text-xs">{job.source}</Badge>}
+                          {job.workMode && <Badge variant="outline" className={cn(getWorkModeColor(job.workMode), "text-[10px] sm:text-xs")}>{job.workMode}</Badge>}
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">{job.appliedDate}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1 shrink-0 flex-wrap sm:flex-nowrap" onClick={(e) => e.stopPropagation()}>
                       {job.jobUrl && (
                         <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(job.jobUrl, "_blank")}>
-                            <ExternalLink className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => window.open(job.jobUrl, "_blank")}>
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </TooltipTrigger><TooltipContent>Open</TooltipContent></Tooltip></TooltipProvider>
                       )}
                       {job.jobUrl && (
                         <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyLink(job.jobUrl)}>
-                            <Copy className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => handleCopyLink(job.jobUrl)}>
+                            <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </TooltipTrigger><TooltipContent>Copy Link</TooltipContent></Tooltip></TooltipProvider>
                       )}
                       <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicate(job.id)}>
-                          <Layers className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => handleDuplicate(job.id)}>
+                          <Layers className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </TooltipTrigger><TooltipContent>Duplicate</TooltipContent></Tooltip></TooltipProvider>
                       <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleArchive(job.id)}>
-                          <Archive className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => handleArchive(job.id)}>
+                          <Archive className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </TooltipTrigger><TooltipContent>{job.archived ? "Unarchive" : "Archive"}</TooltipContent></Tooltip></TooltipProvider>
-                      <select className="h-8 rounded-md border border-border bg-secondary px-2 text-xs" value={job.status} onChange={(e) => handleUpdateStatus(job.id, e.target.value)}>
+                      <select className="h-7 sm:h-8 rounded-md border border-border bg-secondary px-1 sm:px-2 text-[10px] sm:text-xs" value={job.status} onChange={(e) => handleUpdateStatus(job.id, e.target.value)}>
                         {statusFlow.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                       <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(job.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 text-destructive" onClick={() => handleDelete(job.id)}>
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </TooltipTrigger><TooltipContent>Delete</TooltipContent></Tooltip></TooltipProvider>
                     </div>
@@ -552,11 +552,11 @@ export default function JobsPage() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="glass-hover lg:col-span-2">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <Card className="glass-hover sm:col-span-2 lg:col-span-2">
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-4 w-4" />Weekly Applications</CardTitle></CardHeader>
               <CardContent>
-                <div className="flex items-end gap-2 h-40">
+                <div className="flex items-end gap-1 sm:gap-2 h-32 sm:h-40">
                   {weeklyApps.map(([week, count]) => {
                     const max = Math.max(...weeklyApps.map(([, c]) => c), 1)
                     return (
@@ -647,7 +647,7 @@ export default function JobsPage() {
         </TabsContent>
 
         <TabsContent value="salary">
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1">
             <Card className="glass-hover">
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4" />Salary Calculator</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -737,7 +737,7 @@ function CalendarView({ jobs, onSelectJob }: { jobs: Job[]; onSelectJob: (job: J
                   key={day}
                   onClick={() => setSelectedDate(isSelected ? null : dateStr)}
                   className={cn(
-                    "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all hover:bg-accent",
+                    "aspect-square rounded-lg flex flex-col items-center justify-center text-xs sm:text-sm transition-all hover:bg-accent min-h-[32px] sm:min-h-[40px]",
                     isToday && "border border-primary",
                     isSelected && "bg-primary/20 border border-primary",
                     apps.length > 0 && "font-medium"
@@ -745,7 +745,7 @@ function CalendarView({ jobs, onSelectJob }: { jobs: Job[]; onSelectJob: (job: J
                 >
                   <span>{day}</span>
                   {apps.length > 0 && (
-                    <span className={cn("text-[10px] leading-none mt-0.5", isSelected ? "text-primary" : "text-primary")}>
+                    <span className={cn("text-[8px] sm:text-[10px] leading-none mt-0.5", isSelected ? "text-primary" : "text-primary")}>
                       {apps.length}
                     </span>
                   )}
@@ -839,22 +839,22 @@ function WishlistTab({ wishlist, jobs, onUpdate }: { wishlist: WishlistItem[]; j
           return (
             <Card key={item.id} className={cn("glass-hover", item.priority === "dream" && "animated-border")}>
               <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                      {item.company.slice(0, 2).toUpperCase()}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                        {item.company.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm sm:text-base truncate">{item.company}</p>
+                        {item.role && <p className="text-xs text-muted-foreground truncate">{item.role}</p>}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{item.company}</p>
-                      {item.role && <p className="text-xs text-muted-foreground">{item.role}</p>}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Badge className={cn(getPriorityColor(item.priority), "text-[10px] sm:text-xs")}>{item.priority}</Badge>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 text-destructive" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Badge className={getPriorityColor(item.priority)}>{item.priority}</Badge>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(item.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
                 <div className="flex items-center gap-2 mt-3">
                   <Button variant="ghost" size="sm" className={cn("h-7 text-xs gap-1", item.applied || applied ? "text-green-400" : "")} onClick={() => handleToggleApplied(item.id)}>
@@ -1052,7 +1052,7 @@ function DetailDrawer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-border/50 max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass border-border/50 w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto sm:mx-auto mx-0">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
@@ -1140,16 +1140,16 @@ function DetailDrawer({
                 <DialogContent className="glass border-border/50">
                   <DialogHeader><DialogTitle>Schedule Interview</DialogTitle></DialogHeader>
                   <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div><Label>Date *</Label><Input type="date" value={newInterview.date} onChange={(e) => setNewInterview({ ...newInterview, date: e.target.value })} /></div>
                       <div><Label>Time</Label><Input type="time" value={newInterview.time} onChange={(e) => setNewInterview({ ...newInterview, time: e.target.value })} /></div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div><Label>Type</Label><Input value={newInterview.type} onChange={(e) => setNewInterview({ ...newInterview, type: e.target.value })} placeholder="Technical" /></div>
                       <div><Label>Mode</Label><Select value={newInterview.mode} onValueChange={(v: Interview["mode"]) => setNewInterview({ ...newInterview, mode: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="online">Online</SelectItem><SelectItem value="offline">Offline</SelectItem></SelectContent></Select></div>
                     </div>
                     <div><Label>Meeting Link</Label><Input value={newInterview.meetingLink} onChange={(e) => setNewInterview({ ...newInterview, meetingLink: e.target.value })} /></div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div><Label>Round Number</Label><Input type="number" value={newInterview.roundNumber} onChange={(e) => setNewInterview({ ...newInterview, roundNumber: Number(e.target.value) })} /></div>
                       <div><Label>Interviewer</Label><Input value={newInterview.interviewerName} onChange={(e) => setNewInterview({ ...newInterview, interviewerName: e.target.value })} /></div>
                     </div>
@@ -1227,7 +1227,7 @@ function DetailDrawer({
                     <div><Label>Questions Asked</Label><Textarea value={newLearning.questionsAsked} onChange={(e) => setNewLearning({ ...newLearning, questionsAsked: e.target.value })} /></div>
                     <div><Label>Mistakes</Label><Textarea value={newLearning.mistakes} onChange={(e) => setNewLearning({ ...newLearning, mistakes: e.target.value })} /></div>
                     <div><Label>Topics to Revise</Label><Textarea value={newLearning.topicsToRevise} onChange={(e) => setNewLearning({ ...newLearning, topicsToRevise: e.target.value })} /></div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div><Label>Difficulty</Label><Select value={newLearning.difficulty} onValueChange={(v: InterviewLearning["difficulty"]) => setNewLearning({ ...newLearning, difficulty: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="easy">Easy</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="hard">Hard</SelectItem></SelectContent></Select></div>
                       <div><Label>Confidence (1-10)</Label><Input type="number" min={1} max={10} value={newLearning.confidenceRating} onChange={(e) => setNewLearning({ ...newLearning, confidenceRating: Number(e.target.value) })} /></div>
                     </div>
@@ -1243,18 +1243,18 @@ function DetailDrawer({
             <Textarea value={editInterviewNotes} onChange={(e) => setEditInterviewNotes(e.target.value)} onBlur={handleSaveNotes} rows={3} />
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
-            <Button variant="destructive" size="sm" className="gap-1" onClick={() => onDelete(job.id)}>
-              <Trash2 className="h-3 w-3" />Delete Application
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <Button variant="destructive" size="sm" className="gap-1 text-xs sm:text-sm" onClick={() => onDelete(job.id)}>
+              <Trash2 className="h-3 w-3" />Delete
             </Button>
             {job.jobUrl && (
-              <Button variant="outline" size="sm" className="gap-1" onClick={() => handleCopyLink(job.jobUrl)}>
-                <Copy className="h-3 w-3" />Copy Job Link
+              <Button variant="outline" size="sm" className="gap-1 text-xs sm:text-sm" onClick={() => handleCopyLink(job.jobUrl)}>
+                <Copy className="h-3 w-3" />Copy Link
               </Button>
             )}
             {job.jobUrl && (
-              <Button variant="outline" size="sm" className="gap-1" onClick={() => window.open(job.jobUrl, "_blank")}>
-                <ExternalLink className="h-3 w-3" />Open Posting
+              <Button variant="outline" size="sm" className="gap-1 text-xs sm:text-sm" onClick={() => window.open(job.jobUrl, "_blank")}>
+                <ExternalLink className="h-3 w-3" />Open
               </Button>
             )}
           </div>
