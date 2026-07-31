@@ -24,6 +24,29 @@ export interface HabitEntry {
   habits: Record<string, boolean>
 }
 
+export type MistakeType =
+  | "Pattern not recognized"
+  | "Binary Search Logic"
+  | "Sliding Window Logic"
+  | "Off by One"
+  | "Wrong Condition"
+  | "Edge Case"
+  | "Overflow"
+  | "Wrong Complexity"
+  | "Forgot Formula"
+  | "Implementation Bug"
+  | "Other"
+
+export interface AttemptRecord {
+  type: "solved" | "revision"
+  date: string // YYYY-MM-DD
+  confidence?: number
+}
+
+export type BookmarkKey = "isFavorite" | "isMustRevise" | "isInterviewFavorite" | "isCompanyFavorite"
+
+export type RevisionMode = "solved" | "revision" | "combined"
+
 export interface LeetCodeProblem {
   id: string
   name: string
@@ -37,6 +60,31 @@ export interface LeetCodeProblem {
   notes: string
   slug?: string
   frontendId?: number
+  // Spaced repetition
+  nextRevisionDate?: string
+  revisionCount?: number
+  lastRevisionDate?: string
+  confidence?: number
+  mistakes?: MistakeType[]
+  attemptHistory?: AttemptRecord[]
+  // Bookmarks
+  isFavorite?: boolean
+  isMustRevise?: boolean
+  isInterviewFavorite?: boolean
+  isCompanyFavorite?: boolean
+}
+
+export type JournalMood = "Great" | "Good" | "Okay" | "Tired" | "Stressed"
+
+export interface LeetCodeJournal {
+  id: string
+  date: string // YYYY-MM-DD
+  learned: string
+  mistakes: string
+  interviewLearnings: string
+  tomorrowPlan: string
+  mood: JournalMood
+  energy: number // 1-5
 }
 
 export interface LeetCodeQuestion {

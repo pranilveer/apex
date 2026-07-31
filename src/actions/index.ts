@@ -2,6 +2,7 @@
 
 import { getUserId, findMany, findOne, insertOne, updateOne, deleteOne, replaceOne, findManyGlobal, countDocumentsGlobal, distinctGlobal } from "@/lib/db-actions"
 import { generateId } from "@/lib/utils"
+import { getTodayDateString, nextRevisionDateFor } from "@/lib/revision"
 
 export async function fetchGoals() {
   const items = await findMany<import("@/types").Goal>("goals")
@@ -50,12 +51,20 @@ export async function deleteLeetCodeProblem(id: string) {
   await deleteOne("leetcode_problems", id)
 }
 
-export async function fetchLeetCodeQuestions(params: { search?: string; difficulty?: string; topic?: string; limit?: number; skip?: number } = {}): Promise<{ questions: import("@/types").LeetCodeQuestion[]; total: number }> {
-  const { search, difficulty, topic, limit = 50, skip = 0 } = params
+export async function fetchLeetCodeQuestions(params: { search?: string; difficulty?: string; topic?: string; topics?: string[]; limit?: number; skip?: number } = {}): Promise<{ questions: import("@/types").LeetCodeQuestion[]; total: number }> {
+  const { search, difficulty, topic, topics, limit = 50, skip = 0 } = params
   const query: Record<string, unknown> = {}
-  if (search && search.trim()) query.title = { $regex: search.trim(), $options: "i" }
+  if (search && search.trim()) {
+    const q = search.trim()
+    if (/^\d+$/.test(q)) {
+      query.$or = [{ title: { $regex: q, $options: "i" } }, { frontendId: Number(q) }]
+    } else {
+      query.title = { $regex: q, $options: "i" }
+    }
+  }
   if (difficulty && difficulty !== "All") query.difficulty = difficulty
   if (topic && topic !== "All") query.topics = topic
+  if (topics && topics.length > 0) query.topics = { $in: topics }
 
   const [questions, total] = await Promise.all([
     findManyGlobal<import("@/types").LeetCodeQuestion>("leetcode_questions", query, { frontendId: 1 }, limit, skip),
@@ -67,6 +76,29 @@ export async function fetchLeetCodeQuestions(params: { search?: string; difficul
 export async function fetchLeetCodeTopics(): Promise<string[]> {
   const topics = await distinctGlobal("leetcode_questions", "topics")
   return topics.filter(Boolean).sort((a, b) => a.localeCompare(b))
+}
+
+export async function fetchLeetCodeTopicCounts(): Promise<{ topic: string; count: number }[]> {
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const res = await db.collection("leetcode_questions").aggregate([
+    { $unwind: "$topics" },
+    { $group: { _id: "$topics", count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+  ]).toArray()
+  return res.map((r) => ({ topic: r._id as string, count: r.count as number }))
+}
+
+export async function fetchLeetCodePatternTotals(): Promise<Record<string, number>> {
+  const { PATTERN_TOPICS } = await import("@/lib/revision")
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const col = db.collection("leetcode_questions")
+  const entries = Object.entries(PATTERN_TOPICS)
+  const counts = await Promise.all(entries.map(([, tlist]) => col.countDocuments({ topics: { $in: tlist } })))
+  const out: Record<string, number> = {}
+  entries.forEach(([pattern], i) => {
+    out[pattern] = counts[i]
+  })
+  return out
 }
 
 export async function fetchLeetCodeQuestionById(id: string): Promise<import("@/types").LeetCodeQuestion | null> {
@@ -102,23 +134,47 @@ export async function fetchRandomUnsolvedLeetCodeQuestion(): Promise<import("@/t
   return { id: String(_id), ...rest } as unknown as import("@/types").LeetCodeQuestion
 }
 
-export async function markLeetCodeQuestionSolved(questionId: string, data: { timeTaken?: number; notes?: string } = {}): Promise<import("@/types").LeetCodeProblem | null> {
+export async function markLeetCodeQuestionSolved(
+  questionId: string,
+  data: { timeTaken?: number; notes?: string; confidence?: number; mistakes?: import("@/types").MistakeType[]; pattern?: string } = {}
+): Promise<import("@/types").LeetCodeProblem | null> {
   const question = await fetchLeetCodeQuestionById(questionId)
   if (!question) throw new Error("Question not found")
   const date = getTodayDateString()
 
-  const existing = await findOne<import("@/types").LeetCodeProblem>("leetcode_problems", { slug: question.slug, solvedDate: date })
+  const existing = await findOne<import("@/types").LeetCodeProblem>("leetcode_problems", { slug: question.slug })
   if (existing) {
-    await updateOne("leetcode_problems", existing.id as unknown as string, { timeTaken: data.timeTaken ?? existing.timeTaken, notes: data.notes ?? existing.notes } as unknown as Record<string, unknown>)
-    return { ...existing, timeTaken: data.timeTaken ?? existing.timeTaken, notes: data.notes ?? existing.notes }
+    const history: import("@/types").AttemptRecord[] = Array.isArray(existing.attemptHistory) ? existing.attemptHistory : []
+    const last = history[history.length - 1]
+    const alreadyLogged = last && last.type === "solved" && last.date === date
+    const attemptHistory = alreadyLogged ? history : [...history, { type: "solved" as const, date, confidence: data.confidence ?? existing.confidence }]
+    await updateOne("leetcode_problems", existing.id, {
+      timeTaken: data.timeTaken ?? existing.timeTaken,
+      notes: data.notes ?? existing.notes,
+      confidence: data.confidence ?? existing.confidence,
+      mistakes: data.mistakes ?? existing.mistakes ?? [],
+      pattern: data.pattern ?? existing.pattern,
+      attemptHistory,
+      updatedAt: new Date().toISOString(),
+    } as unknown as Record<string, unknown>)
+    return {
+      ...existing,
+      timeTaken: data.timeTaken ?? existing.timeTaken,
+      notes: data.notes ?? existing.notes,
+      confidence: data.confidence ?? existing.confidence,
+      mistakes: data.mistakes ?? existing.mistakes ?? [],
+      pattern: data.pattern ?? existing.pattern,
+      attemptHistory,
+    }
   }
 
+  const confidence = data.confidence ?? 3
   const problem: import("@/types").LeetCodeProblem = {
     id: generateId(),
     name: question.title,
     difficulty: question.difficulty,
     topic: question.topics[0] || "",
-    pattern: "",
+    pattern: data.pattern ?? "",
     solvedDate: date,
     timeTaken: data.timeTaken ?? 0,
     needsRevision: false,
@@ -126,11 +182,162 @@ export async function markLeetCodeQuestionSolved(questionId: string, data: { tim
     notes: data.notes ?? "",
     slug: question.slug,
     frontendId: question.frontendId,
+    revisionCount: 0,
+    lastRevisionDate: date,
+    confidence,
+    mistakes: data.mistakes ?? [],
+    attemptHistory: [{ type: "solved", date, confidence }],
+    nextRevisionDate: nextRevisionDateFor(date, 0, confidence),
   }
   const rest = { ...problem } as unknown as Record<string, unknown>
   delete rest.id
   await insertOne("leetcode_problems", rest)
   return problem
+}
+
+export async function markRevision(problemId: string, confidence: number): Promise<import("@/types").LeetCodeProblem | null> {
+  const { ObjectId } = await import("mongodb")
+  if (!ObjectId.isValid(problemId)) throw new Error("Invalid problem id")
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const col = db.collection("leetcode_problems")
+  const doc = await col.findOne({ _id: new ObjectId(problemId), userId })
+  if (!doc) throw new Error("Problem not found")
+  const date = getTodayDateString()
+  const revisionCount = ((doc.revisionCount as number) ?? 0) + 1
+  const history: import("@/types").AttemptRecord[] = Array.isArray(doc.attemptHistory) ? doc.attemptHistory : []
+  const attemptHistory = [...history, { type: "revision", date, confidence }]
+  const nextRevisionDate = nextRevisionDateFor(date, revisionCount, confidence)
+  await col.updateOne(
+    { _id: doc._id },
+    {
+      $set: {
+        revisionCount,
+        lastRevisionDate: date,
+        confidence,
+        nextRevisionDate,
+        attemptHistory,
+        needsRevision: false,
+        updatedAt: new Date().toISOString(),
+      },
+    }
+  )
+  const { _id, ...rest } = doc as unknown as Record<string, unknown>
+  return {
+    ...rest,
+    id: String(_id),
+    revisionCount,
+    lastRevisionDate: date,
+    confidence,
+    nextRevisionDate,
+    attemptHistory,
+    needsRevision: false,
+  } as unknown as import("@/types").LeetCodeProblem
+}
+
+export async function updateLeetCodeNotes(problemId: string, notes: string) {
+  await updateOne("leetcode_problems", problemId, { notes } as unknown as Record<string, unknown>)
+}
+
+export async function updateLeetCodeConfidence(problemId: string, confidence: number) {
+  await updateOne("leetcode_problems", problemId, { confidence } as unknown as Record<string, unknown>)
+}
+
+export async function updateLeetCodeMistakes(problemId: string, mistakes: import("@/types").MistakeType[]) {
+  await updateOne("leetcode_problems", problemId, { mistakes } as unknown as Record<string, unknown>)
+}
+
+export async function updateLeetCodePattern(problemId: string, pattern: string) {
+  await updateOne("leetcode_problems", problemId, { pattern } as unknown as Record<string, unknown>)
+}
+
+export async function updateLeetCodeCompanyTags(problemId: string, companyTags: string[]) {
+  await updateOne("leetcode_problems", problemId, { companyTags } as unknown as Record<string, unknown>)
+}
+
+export async function toggleLeetCodeBookmark(problemId: string, key: import("@/types").BookmarkKey): Promise<boolean> {
+  const { ObjectId } = await import("mongodb")
+  if (!ObjectId.isValid(problemId)) throw new Error("Invalid problem id")
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const col = db.collection("leetcode_problems")
+  const doc = await col.findOne({ _id: new ObjectId(problemId), userId }, { projection: { [key]: 1 } })
+  const current = Boolean(doc?.[key])
+  await col.updateOne({ _id: new ObjectId(problemId), userId }, { $set: { [key]: !current, updatedAt: new Date().toISOString() } })
+  return !current
+}
+
+export async function fetchDailyChallenge(): Promise<{
+  easy: import("@/types").LeetCodeQuestion | null
+  medium: import("@/types").LeetCodeQuestion | null
+  hard: import("@/types").LeetCodeQuestion | null
+  revision: import("@/types").LeetCodeProblem | null
+}> {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const solved = await db.collection("leetcode_problems").find({ userId, slug: { $exists: true, $ne: "" } }).project({ slug: 1 }).toArray()
+  const excluded = [...new Set(solved.map((s) => s.slug).filter(Boolean))]
+  const nin = excluded.length > 0 ? { slug: { $nin: excluded } } : {}
+
+  const pick = async (difficulty: string) => {
+    const docs = await db.collection("leetcode_questions").aggregate([
+      { $match: { ...nin, difficulty } },
+      { $sample: { size: 1 } },
+    ]).toArray()
+    if (docs.length === 0) return null
+    const { _id, ...rest } = docs[0] as unknown as Record<string, unknown>
+    return { id: String(_id), ...rest } as unknown as import("@/types").LeetCodeQuestion
+  }
+
+  const today = getTodayDateString()
+  const due = await db.collection("leetcode_problems").find({ userId, nextRevisionDate: { $lte: today }, lastRevisionDate: { $ne: today } }).toArray()
+  let revision: import("@/types").LeetCodeProblem | null = null
+  if (due.length > 0) {
+    const chosen = due[Math.floor(Math.random() * due.length)]
+    const { _id, ...rest } = chosen as unknown as Record<string, unknown>
+    revision = { ...rest, id: String(_id) } as unknown as import("@/types").LeetCodeProblem
+  }
+
+  const [easy, medium, hard] = await Promise.all([pick("Easy"), pick("Medium"), pick("Hard")])
+  return { easy, medium, hard, revision }
+}
+
+export async function fetchQuestionsByTopics(params: { topics?: string[]; difficulty?: string; excludeSolved?: boolean; limit?: number } = {}): Promise<{ questions: import("@/types").LeetCodeQuestion[]; total: number }> {
+  const { topics = [], difficulty, excludeSolved, limit = 10 } = params
+  const query: Record<string, unknown> = {}
+  if (topics.length > 0) query.topics = { $in: topics }
+  if (difficulty && difficulty !== "All") query.difficulty = difficulty
+  if (excludeSolved) {
+    const userId = await getUserId()
+    const db = await (await import("@/lib/mongodb")).getDb()
+    const solved = await db.collection("leetcode_problems").find({ userId, slug: { $exists: true, $ne: "" } }).project({ slug: 1 }).toArray()
+    const excluded = [...new Set(solved.map((s) => s.slug).filter(Boolean))]
+    if (excluded.length > 0) query.slug = { $nin: excluded }
+  }
+  const [questions, total] = await Promise.all([
+    findManyGlobal<import("@/types").LeetCodeQuestion>("leetcode_questions", query, { frontendId: 1 }, limit, 0),
+    countDocumentsGlobal("leetcode_questions", query),
+  ])
+  return { questions, total }
+}
+
+export async function fetchLeetCodeJournals(): Promise<import("@/types").LeetCodeJournal[]> {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const docs = await db.collection("leetcode_journals").find({ userId }).sort({ date: -1 }).toArray()
+  return docs.map(({ _id, ...rest }) => ({ ...rest, id: String(_id) })) as unknown as import("@/types").LeetCodeJournal[]
+}
+
+export async function saveLeetCodeJournal(entry: import("@/types").LeetCodeJournal) {
+  const { id: _id, ...rest } = entry
+  void _id
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  await db.collection("leetcode_journals").updateOne(
+    { userId, date: entry.date },
+    { $set: { ...rest, updatedAt: new Date().toISOString() } },
+    { upsert: true }
+  )
 }
 
 export async function fetchGitHubActivities() {
@@ -418,10 +625,6 @@ export async function deleteNotification(id: string) {
 export async function fetchGamificationData() {
   const data = await findOne<import("@/types").GamificationData>("gamification")
   return data
-}
-
-function getTodayDateString(): string {
-  return new Date().toISOString().split("T")[0]
 }
 
 export async function fetchDailyTasks() {
