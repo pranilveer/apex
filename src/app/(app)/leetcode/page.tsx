@@ -1,58 +1,57 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { motion } from "framer-motion"
-import { Plus, Flame, CheckCircle2, AlertTriangle, Brain, ExternalLink, Trash2, Search, Dices, Clock, Loader2, TrendingUp, ChevronLeft, ChevronRight, CalendarDays, RefreshCw } from "lucide-react"
+import dynamic from "next/dynamic"
+import {
+  Plus, Flame, CheckCircle2, Brain, ExternalLink, Trash2, Search, Dices,
+  Clock, Loader2, TrendingUp, Star,
+} from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getDifficultyColor, generateId, calculateStreak } from "@/lib/utils"
+import { getDifficultyColor, generateId, calculateStreak, cn } from "@/lib/utils"
+import {
+  getTodayDateString, nextRevisionDateFor, solvedDatesOf,
+  COMPANY_NAMES, COMPANY_TOPICS, BOOKMARK_DEFS,
+} from "@/lib/revision"
 import {
   fetchLeetCodeProblems, addLeetCodeProblem, toggleRevision, deleteLeetCodeProblem,
-  fetchRandomUnsolvedLeetCodeQuestion, markLeetCodeQuestionSolved,
-  fetchLeetCodeQuestions, fetchLeetCodeTopics,
+  fetchRandomUnsolvedLeetCodeQuestion, markLeetCodeQuestionSolved, markRevision,
+  updateLeetCodeNotes, updateLeetCodeConfidence, updateLeetCodeMistakes, updateLeetCodePattern, updateLeetCodeCompanyTags,
+  toggleLeetCodeBookmark, fetchLeetCodeQuestions, fetchLeetCodeTopics, fetchLeetCodeTopicCounts, fetchLeetCodePatternTotals, fetchDailyChallenge,
 } from "@/actions"
-import type { LeetCodeQuestion } from "@/types"
+import type { BookmarkKey, LeetCodeProblem, LeetCodeQuestion, RevisionMode } from "@/types"
+import { Heatmap } from "@/components/leetcode/heatmap"
+import { RevisionList } from "@/components/leetcode/revision-list"
+import { DailyChallenge, type DailyChallengeData } from "@/components/leetcode/daily-challenge"
+import { SmartSearch, applySmartSearch, DEFAULT_SMART_SEARCH, type SmartSearchState } from "@/components/leetcode/smart-search"
+import { PatternTracker } from "@/components/leetcode/pattern-tracker"
+import { WeakTopics } from "@/components/leetcode/weak-topics"
+import { CompanyStats } from "@/components/leetcode/company-stats"
+import { ConfidenceStars } from "@/components/leetcode/confidence-picker"
 
-interface Problem {
-  id: string
-  name: string
-  difficulty: "Easy" | "Medium" | "Hard"
-  topic: string
-  pattern: string
-  solvedDate: string
-  timeTaken: number
-  needsRevision: boolean
-  companyTags: string[]
-  notes: string
-  slug?: string
-  frontendId?: number
-}
+const QuestionDrawer = dynamic(() => import("@/components/leetcode/question-drawer").then((m) => m.QuestionDrawer), { ssr: false, loading: () => null })
+const LearningAnalytics = dynamic(() => import("@/components/leetcode/learning-analytics").then((m) => m.LearningAnalytics), { ssr: false, loading: () => null })
+const PrepMode = dynamic(() => import("@/components/leetcode/prep-mode").then((m) => m.PrepMode), { ssr: false, loading: () => null })
+const JournalPanel = dynamic(() => import("@/components/leetcode/journal-panel").then((m) => m.JournalPanel), { ssr: false, loading: () => null })
 
 const BANK_LIMIT = 50
 
-const topicStats: { topic: string; solved: number; total: number }[] = []
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-
-function heatColor(count: number): string {
-  if (count >= 5) return "bg-green-500"
-  if (count >= 3) return "bg-green-600"
-  if (count >= 2) return "bg-green-800"
-  if (count >= 1) return "bg-green-900/70"
-  return "bg-secondary/50"
-}
-
 export default function LeetcodePage() {
-  const [problems, setProblems] = useState<Problem[]>([])
-  const [search, setSearch] = useState("")
+  const todayStr = getTodayDateString()
+  const [problems, setProblems] = useState<LeetCodeProblem[]>([])
+  const [topics, setTopics] = useState<string[]>([])
+  const [topicCounts, setTopicCounts] = useState<Record<string, number>>({})
+  const [patternTotals, setPatternTotals] = useState<Record<string, number>>({})
+  const [activeTab, setActiveTab] = useState("today")
+  const [actionError, setActionError] = useState("")
+
   const [open, setOpen] = useState(false)
   const [newProblem, setNewProblem] = useState({ name: "", difficulty: "Easy" as "Easy" | "Medium" | "Hard", topic: "", pattern: "", timeTaken: 0, needsRevision: false, companyTags: "", notes: "" })
 
@@ -62,45 +61,23 @@ export default function LeetcodePage() {
   const [addSearch, setAddSearch] = useState("")
   const [addResults, setAddResults] = useState<LeetCodeQuestion[]>([])
   const [addLoading, setAddLoading] = useState(false)
+
   const [viewMonth, setViewMonth] = useState(() => new Date())
-  const [actionError, setActionError] = useState("")
+  const [heatMode, setHeatMode] = useState<RevisionMode>("solved")
 
   const [bankSearch, setBankSearch] = useState("")
   const [bankDifficulty, setBankDifficulty] = useState("All")
   const [bankTopic, setBankTopic] = useState("All")
-  const [topics, setTopics] = useState<string[]>([])
+  const [bankCompany, setBankCompany] = useState("")
   const [bankQuestions, setBankQuestions] = useState<LeetCodeQuestion[]>([])
   const [bankTotal, setBankTotal] = useState(0)
   const [bankLoading, setBankLoading] = useState(false)
   const bankSkipRef = useRef(0)
 
-  const todayStr = new Date().toISOString().split("T")[0]
-
-  const easy = problems.filter((p) => p.difficulty === "Easy").length
-  const medium = problems.filter((p) => p.difficulty === "Medium").length
-  const hard = problems.filter((p) => p.difficulty === "Hard").length
-  const revision = problems.filter((p) => p.needsRevision).length
-
-  const filtered = problems.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.topic.toLowerCase().includes(search.toLowerCase()))
-
-  const solvedDates = problems.map((p) => p.solvedDate)
-  const streak = calculateStreak(solvedDates).current
-  const weekAgo = new Date()
-  weekAgo.setDate(weekAgo.getDate() - 7)
-  const solvedThisWeek = problems.filter((p) => new Date(p.solvedDate) >= weekAgo).length
-
-  const todaySolved = problems.filter((p) => p.solvedDate === todayStr)
-  const todaySolvedSlugs = new Set(todaySolved.map((p) => p.slug))
-
-  const solvedByDate = problems.reduce((map, p) => {
-    map.set(p.solvedDate, (map.get(p.solvedDate) || 0) + 1)
-    return map
-  }, new Map<string, number>())
-
-  const monthYear = viewMonth.getFullYear()
-  const monthIndex = viewMonth.getMonth()
-  const firstWeekday = new Date(monthYear, monthIndex, 1).getDay()
-  const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate()
+  const [smartSearch, setSmartSearch] = useState<SmartSearchState>(DEFAULT_SMART_SEARCH)
+  const [challenge, setChallenge] = useState<DailyChallengeData | null>(null)
+  const [challengeLoading, setChallengeLoading] = useState(false)
+  const [drawer, setDrawer] = useState<{ problem: LeetCodeProblem | null; question: LeetCodeQuestion | null } | null>(null)
 
   const loadProblems = async () => {
     setProblems(await fetchLeetCodeProblems())
@@ -109,21 +86,30 @@ export default function LeetcodePage() {
   useEffect(() => {
     fetchLeetCodeProblems().then(setProblems)
     fetchLeetCodeTopics().then(setTopics)
+    fetchLeetCodeTopicCounts().then((rows) => {
+      const m: Record<string, number> = {}
+      for (const r of rows) m[r.topic] = r.count
+      setTopicCounts(m)
+    })
+    fetchLeetCodePatternTotals().then(setPatternTotals)
+    fetchDailyChallenge().then(setChallenge)
   }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
       bankSkipRef.current = 0
       setBankLoading(true)
-      fetchLeetCodeQuestions({ search: bankSearch, difficulty: bankDifficulty, topic: bankTopic, limit: BANK_LIMIT, skip: 0 })
+      const topicsQuery = bankCompany ? COMPANY_TOPICS[bankCompany] : undefined
+      fetchLeetCodeQuestions({ search: bankSearch, difficulty: bankDifficulty, topic: bankTopic, topics: topicsQuery, limit: BANK_LIMIT, skip: 0 })
         .then(({ questions, total }) => {
           setBankQuestions(questions)
           setBankTotal(total)
           setBankLoading(false)
         })
+        .catch(() => setBankLoading(false))
     }, bankSearch ? 300 : 0)
     return () => clearTimeout(timer)
-  }, [bankSearch, bankDifficulty, bankTopic])
+  }, [bankSearch, bankDifficulty, bankTopic, bankCompany])
 
   useEffect(() => {
     if (!addOpen) return
@@ -138,11 +124,68 @@ export default function LeetcodePage() {
     return () => clearTimeout(timer)
   }, [addOpen, addSearch])
 
+  const easy = problems.filter((p) => p.difficulty === "Easy").length
+  const medium = problems.filter((p) => p.difficulty === "Medium").length
+  const hard = problems.filter((p) => p.difficulty === "Hard").length
+  const revision = problems.filter((p) => p.needsRevision).length
+
+  const filteredProblems = useMemo(() => applySmartSearch(problems, smartSearch), [problems, smartSearch])
+
+  const allSolvedDates = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of problems) for (const d of solvedDatesOf(p)) set.add(d)
+    return [...set]
+  }, [problems])
+  const streak = calculateStreak(allSolvedDates).current
+
+  const weekAgo = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 7)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  }, [])
+  const solvedThisWeek = allSolvedDates.filter((d) => d >= weekAgo).length
+
+  const todaySolved = useMemo(
+    () => problems.filter((p) => p.solvedDate === todayStr || (p.attemptHistory ?? []).some((a) => a.type === "solved" && a.date === todayStr)),
+    [problems, todayStr]
+  )
+  const todaySolvedSlugs = useMemo(() => new Set(todaySolved.flatMap((p) => p.slug ? [p.slug] : [])), [todaySolved])
+
+  const solvedByDate = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const p of problems) {
+      for (const d of solvedDatesOf(p)) map.set(d, (map.get(d) ?? 0) + 1)
+    }
+    return map
+  }, [problems])
+
+  const revisionByDate = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const p of problems) {
+      for (const a of p.attemptHistory ?? []) {
+        if (a.type === "revision") map.set(a.date, (map.get(a.date) ?? 0) + 1)
+      }
+      if (p.lastRevisionDate && !(p.attemptHistory ?? []).some((a) => a.type === "revision")) {
+        map.set(p.lastRevisionDate, (map.get(p.lastRevisionDate) ?? 0) + 1)
+      }
+    }
+    return map
+  }, [problems])
+
+  const dueRevision = useMemo(
+    () => problems.filter((p) => p.nextRevisionDate && p.nextRevisionDate <= todayStr && p.lastRevisionDate !== todayStr),
+    [problems, todayStr]
+  )
+  const upcomingRevision = useMemo(
+    () => problems.filter((p) => p.nextRevisionDate && p.nextRevisionDate > todayStr).sort((a, b) => (a.nextRevisionDate ?? "").localeCompare(b.nextRevisionDate ?? "")),
+    [problems, todayStr]
+  )
+  const doneToday = useMemo(() => problems.filter((p) => p.lastRevisionDate === todayStr), [problems, todayStr])
+
   const handleAdd = async () => {
     if (!newProblem.name) return
-    const id = generateId()
-    const problem: Problem = {
-      id,
+    const problem: LeetCodeProblem = {
+      id: generateId(),
       name: newProblem.name,
       difficulty: newProblem.difficulty,
       topic: newProblem.topic,
@@ -152,6 +195,11 @@ export default function LeetcodePage() {
       needsRevision: newProblem.needsRevision,
       companyTags: newProblem.companyTags.split(",").map((t) => t.trim()).filter(Boolean),
       notes: newProblem.notes,
+      revisionCount: 0,
+      lastRevisionDate: todayStr,
+      confidence: 3,
+      attemptHistory: [{ type: "solved", date: todayStr, confidence: 3 }],
+      nextRevisionDate: nextRevisionDateFor(todayStr, 0, 3),
     }
     setProblems([...problems, problem])
     setOpen(false)
@@ -169,6 +217,7 @@ export default function LeetcodePage() {
 
   const handleDeleteProblem = async (id: string) => {
     setProblems(problems.filter((p) => p.id !== id))
+    if (drawer?.problem?.id === id) setDrawer(null)
     await deleteLeetCodeProblem(id)
   }
 
@@ -186,13 +235,17 @@ export default function LeetcodePage() {
     }
   }
 
+  const markSolvedAndReload = async (q: LeetCodeQuestion, confidence?: number) => {
+    await markLeetCodeQuestionSolved(q.id, { confidence })
+    await loadProblems()
+  }
+
   const handleAddSuggestion = async () => {
     if (!suggestion) return
     setActionError("")
     try {
-      await markLeetCodeQuestionSolved(suggestion.id)
+      await markSolvedAndReload(suggestion)
       setSuggestion(null)
-      await loadProblems()
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to add question")
     }
@@ -201,8 +254,7 @@ export default function LeetcodePage() {
   const handleBankMarkSolved = async (q: LeetCodeQuestion) => {
     setActionError("")
     try {
-      await markLeetCodeQuestionSolved(q.id)
-      await loadProblems()
+      await markSolvedAndReload(q)
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to mark as solved")
     }
@@ -211,11 +263,84 @@ export default function LeetcodePage() {
   const handleDialogAdd = async (q: LeetCodeQuestion) => {
     setActionError("")
     try {
-      await markLeetCodeQuestionSolved(q.id)
+      await markSolvedAndReload(q)
       setAddSearch("")
-      await loadProblems()
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to add question")
+    }
+  }
+
+  const handleDrawerMarkSolved = async (q: LeetCodeQuestion, confidence?: number) => {
+    setActionError("")
+    try {
+      await markLeetCodeQuestionSolved(q.id, { confidence })
+      const list = await fetchLeetCodeProblems()
+      setProblems(list)
+      setDrawer({ problem: list.find((p) => p.slug === q.slug) ?? null, question: q })
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Failed to mark as solved")
+    }
+  }
+
+  const handleMarkRevised = async (id: string, confidence: number) => {
+    setProblems((prev) => prev.map((p) => {
+      if (p.id !== id) return p
+      const revisionCount = (p.revisionCount ?? 0) + 1
+      return {
+        ...p,
+        revisionCount,
+        lastRevisionDate: todayStr,
+        confidence,
+        nextRevisionDate: nextRevisionDateFor(todayStr, revisionCount, confidence),
+        attemptHistory: [...(p.attemptHistory ?? []), { type: "revision", date: todayStr, confidence }],
+        needsRevision: false,
+      }
+    }))
+    if (drawer?.problem?.id === id) {
+      const p = problems.find((x) => x.id === id)!
+      const revisionCount = (p.revisionCount ?? 0) + 1
+      setDrawer({
+        ...drawer,
+        problem: {
+          ...drawer.problem,
+          revisionCount,
+          lastRevisionDate: todayStr,
+          confidence,
+          nextRevisionDate: nextRevisionDateFor(todayStr, revisionCount, confidence),
+          attemptHistory: [...(drawer.problem.attemptHistory ?? []), { type: "revision", date: todayStr, confidence }],
+          needsRevision: false,
+        },
+      })
+    }
+    setActionError("")
+    try {
+      await markRevision(id, confidence)
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Failed to mark revision")
+    }
+  }
+
+  const handleUpdateProblem = async (id: string, patch: Partial<LeetCodeProblem>) => {
+    setProblems((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+    if (drawer?.problem?.id === id) setDrawer({ ...drawer, problem: { ...drawer.problem, ...patch } })
+    try {
+      if (patch.notes !== undefined) await updateLeetCodeNotes(id, patch.notes)
+      if (patch.confidence !== undefined) await updateLeetCodeConfidence(id, patch.confidence)
+      if (patch.mistakes !== undefined) await updateLeetCodeMistakes(id, patch.mistakes)
+      if (patch.pattern !== undefined) await updateLeetCodePattern(id, patch.pattern)
+      if (patch.companyTags !== undefined) await updateLeetCodeCompanyTags(id, patch.companyTags)
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Failed to save")
+    }
+  }
+
+  const handleToggleBookmark = async (id: string, key: BookmarkKey) => {
+    setProblems((prev) => prev.map((p) => (p.id === id ? { ...p, [key]: !p[key] } : p)))
+    if (drawer?.problem?.id === id) setDrawer({ ...drawer, problem: { ...drawer.problem, [key]: !drawer.problem[key] } })
+    try {
+      await toggleLeetCodeBookmark(id, key)
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Failed to update bookmark")
     }
   }
 
@@ -223,13 +348,36 @@ export default function LeetcodePage() {
     bankSkipRef.current += BANK_LIMIT
     setBankLoading(true)
     try {
-      const { questions } = await fetchLeetCodeQuestions({ search: bankSearch, difficulty: bankDifficulty, topic: bankTopic, limit: BANK_LIMIT, skip: bankSkipRef.current })
+      const topicsQuery = bankCompany ? COMPANY_TOPICS[bankCompany] : undefined
+      const { questions } = await fetchLeetCodeQuestions({ search: bankSearch, difficulty: bankDifficulty, topic: bankTopic, topics: topicsQuery, limit: BANK_LIMIT, skip: bankSkipRef.current })
       setBankQuestions((prev) => [...prev, ...questions])
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to load more questions")
     } finally {
       setBankLoading(false)
     }
+  }
+
+  const loadChallenge = async () => {
+    setChallengeLoading(true)
+    setActionError("")
+    try {
+      setChallenge(await fetchDailyChallenge())
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Failed to load challenge")
+    } finally {
+      setChallengeLoading(false)
+    }
+  }
+
+  const openDrawer = (problem: LeetCodeProblem | null, question: LeetCodeQuestion | null) => setDrawer({ problem, question })
+
+  const bankProblemFor = (q: LeetCodeQuestion) => problems.find((p) => p.slug === q.slug) ?? null
+
+  const goToBank = (opts: { topic?: string; company?: string }) => {
+    setBankTopic(opts.topic ?? "All")
+    setBankCompany(opts.company ?? "")
+    setActiveTab("bank")
   }
 
   return (
@@ -275,14 +423,16 @@ export default function LeetcodePage() {
         <Card className="glass-hover col-span-2 sm:col-span-1"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-orange-400">{revision}</p><p className="text-xs text-muted-foreground">Need Revision</p></CardContent></Card>
       </div>
 
-      <Tabs defaultValue="today" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto sm:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="today">Today</TabsTrigger>
           <TabsTrigger value="bank">Question Bank</TabsTrigger>
+          <TabsTrigger value="revision">Revision</TabsTrigger>
+          <TabsTrigger value="patterns">Patterns</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="prep">Prep</TabsTrigger>
+          <TabsTrigger value="journal">Journal</TabsTrigger>
           <TabsTrigger value="problems">Problems</TabsTrigger>
-          <TabsTrigger value="revision">Revision List</TabsTrigger>
-          <TabsTrigger value="topics">Weak Topics</TabsTrigger>
-          <TabsTrigger value="charts">Charts</TabsTrigger>
         </TabsList>
 
         {actionError && (
@@ -308,53 +458,26 @@ export default function LeetcodePage() {
             </CardContent></Card>
           </div>
 
-          <Card className="glass-hover">
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-yellow-400" />
-                  <p className="font-semibold">Monthly Streak Tracker</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewMonth(new Date(monthYear, monthIndex - 1, 1))}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <p className="text-sm font-medium w-28 sm:w-36 text-center">{MONTH_NAMES[monthIndex]} {monthYear}</p>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewMonth(new Date(monthYear, monthIndex + 1, 1))}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-7 gap-1">
-                {WEEKDAYS.map((d) => <div key={d} className="text-center text-[10px] text-muted-foreground uppercase">{d}</div>)}
-                {Array.from({ length: firstWeekday }).map((_, i) => <div key={`blank-${i}`} />)}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1
-                  const dateKey = `${monthYear}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-                  const count = solvedByDate.get(dateKey) || 0
-                  const isToday = dateKey === todayStr
-                  return (
-                    <div
-                      key={day}
-                      className={`aspect-square rounded-md flex items-center justify-center text-xs ${heatColor(count)} ${count > 0 ? "text-zinc-100" : "text-muted-foreground"} ${isToday ? "ring-2 ring-yellow-400" : ""}`}
-                      title={`${count} solved on ${dateKey}`}
-                    >
-                      {day}
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                Less
-                <span className={`h-3 w-3 rounded-sm ${heatColor(0)}`} />
-                <span className={`h-3 w-3 rounded-sm ${heatColor(1)}`} />
-                <span className={`h-3 w-3 rounded-sm ${heatColor(2)}`} />
-                <span className={`h-3 w-3 rounded-sm ${heatColor(3)}`} />
-                <span className={`h-3 w-3 rounded-sm ${heatColor(5)}`} />
-                More
-              </div>
-            </CardContent>
-          </Card>
+          <RevisionList due={dueRevision} today={todayStr} onMarkRevised={handleMarkRevised} onOpen={(p) => openDrawer(p, null)} />
+
+          <DailyChallenge
+            challenge={challenge}
+            loading={challengeLoading}
+            solvedSlugs={todaySolvedSlugs}
+            onRefresh={loadChallenge}
+            onAdd={async (q) => { await handleBankMarkSolved(q); await loadChallenge() }}
+            onMarkRevision={handleMarkRevised}
+          />
+
+          <Heatmap
+            mode={heatMode}
+            onModeChange={setHeatMode}
+            solvedByDate={solvedByDate}
+            revisionByDate={revisionByDate}
+            month={viewMonth}
+            onMonthChange={setViewMonth}
+            todayStr={todayStr}
+          />
 
           <Card className="glass-hover">
             <CardContent className="p-4 sm:p-6 space-y-4">
@@ -385,7 +508,7 @@ export default function LeetcodePage() {
                   </div>
                   <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0">
                     <Button size="sm" onClick={handleAddSuggestion} className="gap-1.5 w-full sm:w-auto"><CheckCircle2 className="h-4 w-4" />Add to Today</Button>
-                    <Button size="sm" variant="ghost" onClick={handleSurprise} className="gap-1.5 w-full sm:w-auto"><RefreshCw className="h-4 w-4" />Another</Button>
+                    <Button size="sm" variant="ghost" onClick={handleSurprise} className="gap-1.5 w-full sm:w-auto"><Dices className="h-4 w-4" />Another</Button>
                   </div>
                 </div>
               )}
@@ -397,16 +520,19 @@ export default function LeetcodePage() {
                   {todaySolved.map((p, i) => (
                     <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                       <div className="flex items-center justify-between gap-3 rounded-lg border border-border/50 p-3">
-                        <div className="flex items-center gap-3 min-w-0">
+                        <button type="button" className="flex min-w-0 items-center gap-3 text-left" onClick={() => openDrawer(p, null)}>
                           <Badge className={getDifficultyColor(p.difficulty)}>{p.difficulty}</Badge>
                           <div className="min-w-0">
                             <p className="font-medium truncate">{p.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{p.topic || "Untagged"}{p.timeTaken > 0 ? ` · ${p.timeTaken}m` : ""}</p>
                           </div>
+                        </button>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <ConfidenceStars value={p.confidence ?? 0} size="sm" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteProblem(p.id)}>
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleDeleteProblem(p.id)}>
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
                       </div>
                     </motion.div>
                   ))}
@@ -426,7 +552,7 @@ export default function LeetcodePage() {
                 </div>
                 <Clock className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 <div className="relative col-span-2 sm:col-span-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input className="pl-10" placeholder="Search questions..." value={bankSearch} onChange={(e) => setBankSearch(e.target.value)} />
@@ -440,11 +566,18 @@ export default function LeetcodePage() {
                     <SelectItem value="Hard">Hard</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={bankTopic} onValueChange={setBankTopic}>
+                <Select value={bankTopic} onValueChange={(v) => { setBankTopic(v); setBankCompany("") }}>
                   <SelectTrigger><SelectValue placeholder="Topic" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Topics</SelectItem>
                     {topics.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={bankCompany} onValueChange={(v) => { setBankCompany(v); setBankTopic("All") }}>
+                  <SelectTrigger><SelectValue placeholder="Company" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Companies</SelectItem>
+                    {COMPANY_NAMES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -457,37 +590,45 @@ export default function LeetcodePage() {
             ) : bankQuestions.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No questions match your filters.</p>
             ) : (
-              bankQuestions.map((q, i) => (
-                <motion.div key={q.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.4) }}>
-                  <Card className="glass-hover">
-                    <CardContent className="p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <span className="text-sm text-muted-foreground font-mono mt-0.5 w-8 text-right">{q.frontendId}</span>
-                          <div>
-                            <p className="font-medium">{q.title}</p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <Badge className={getDifficultyColor(q.difficulty)}>{q.difficulty}</Badge>
-                              {q.topics.slice(0, 3).map((t) => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}
-                              {q.topics.length > 3 && <span className="text-xs text-muted-foreground">+{q.topics.length - 3} more</span>}
+              bankQuestions.map((q, i) => {
+                const solved = bankProblemFor(q)
+                return (
+                  <motion.div key={q.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.4) }}>
+                    <Card className="glass-hover">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <button type="button" className="flex items-start gap-3 text-left" onClick={() => openDrawer(solved, q)}>
+                            <span className="text-sm text-muted-foreground font-mono mt-0.5 w-8 text-right">{q.frontendId}</span>
+                            <div>
+                              <p className="font-medium">{q.title}</p>
+                              <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <Badge className={getDifficultyColor(q.difficulty)}>{q.difficulty}</Badge>
+                                {q.topics.slice(0, 3).map((t) => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}
+                                {q.topics.length > 3 && <span className="text-xs text-muted-foreground">+{q.topics.length - 3} more</span>}
+                              </div>
                             </div>
+                          </button>
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Button size="sm" variant="outline" asChild className="gap-1.5 flex-1 sm:flex-none">
+                              <a href={q.url} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" />Open</a>
+                            </Button>
+                            {solved ? (
+                              <Button size="sm" variant="ghost" disabled className="gap-1.5 flex-1 sm:flex-none"><CheckCircle2 className="h-4 w-4 text-green-400" />Solved Today</Button>
+                            ) : (
+                              <Button size="sm" onClick={() => handleBankMarkSolved(q)} className="gap-1.5 flex-1 sm:flex-none"><CheckCircle2 className="h-4 w-4" />Mark Solved</Button>
+                            )}
+                            {solved && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleToggleBookmark(solved.id, "isFavorite")}>
+                                <Star className={cn("h-4 w-4", solved.isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground")} />
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <Button size="sm" variant="outline" asChild className="gap-1.5 flex-1 sm:flex-none">
-                            <a href={q.url} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" />Open</a>
-                          </Button>
-                          {todaySolvedSlugs.has(q.slug) ? (
-                            <Button size="sm" variant="ghost" disabled className="gap-1.5 flex-1 sm:flex-none"><CheckCircle2 className="h-4 w-4 text-green-400" />Solved Today</Button>
-                          ) : (
-                            <Button size="sm" onClick={() => handleBankMarkSolved(q)} className="gap-1.5 flex-1 sm:flex-none"><CheckCircle2 className="h-4 w-4" />Mark Solved</Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )
+              })
             )}
           </div>
 
@@ -500,83 +641,128 @@ export default function LeetcodePage() {
           )}
         </TabsContent>
 
-        <TabsContent value="problems" className="space-y-4">
-          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input className="pl-10" placeholder="Search problems..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-          <div className="space-y-2">
-            {filtered.map((p, i) => (
-              <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <Card className="glass-hover">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="flex items-center gap-4">
+        <TabsContent value="revision" className="space-y-4">
+          <RevisionList due={dueRevision} today={todayStr} onMarkRevised={handleMarkRevised} onOpen={(p) => openDrawer(p, null)} />
+
+          {doneToday.length > 0 && (
+            <Card className="glass-hover">
+              <CardContent className="p-4 sm:p-6 space-y-2">
+                <p className="text-sm font-medium">Completed Today</p>
+                {doneToday.map((p) => (
+                  <button key={p.id} type="button" onClick={() => openDrawer(p, null)} className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/50 p-2.5 text-left transition-colors hover:bg-accent">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
+                      <p className="truncate text-sm">{p.name}</p>
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">Next: {p.nextRevisionDate ?? "—"}</span>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="glass-hover">
+            <CardContent className="p-4 sm:p-6 space-y-2">
+              <p className="text-sm font-medium">Upcoming ({upcomingRevision.length})</p>
+              {upcomingRevision.length === 0 ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">No upcoming revisions scheduled.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {upcomingRevision.map((p) => (
+                    <button key={p.id} type="button" onClick={() => openDrawer(p, null)} className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/50 p-2.5 text-left transition-colors hover:bg-accent">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Badge className={getDifficultyColor(p.difficulty)}>{p.difficulty}</Badge>
-                        <div>
-                          <p className="font-medium">{p.name}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <span>{p.topic}</span><span>·</span><span>{p.pattern}</span><span>·</span><span>{p.timeTaken}m</span>
-                          </div>
-                        </div>
+                        <p className="truncate text-sm">{p.name}</p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {p.companyTags.map((tag) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleRevision(p.id)}>
-                          <Brain className={`h-4 w-4 ${p.needsRevision ? "text-orange-400" : "text-muted-foreground"}`} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteProblem(p.id)}>
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="revision" className="space-y-3">
-          {problems.filter((p) => p.needsRevision).map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="glass-hover border-orange-400/20">
-                <CardContent className="p-4 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <AlertTriangle className="h-4 w-4 text-orange-400 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.topic} · {p.difficulty}</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="shrink-0" onClick={() => handleToggleRevision(p.id)}>Mark Reviewed</Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-          {problems.filter((p) => p.needsRevision).length === 0 && <p className="text-center text-muted-foreground py-8">No problems need revision!</p>}
-        </TabsContent>
-
-        <TabsContent value="topics" className="space-y-3">
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-            {topicStats.map((t) => (
-              <Card key={t.topic} className="glass-hover">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium">{t.topic}</p>
-                    <span className="text-sm text-muted-foreground">{t.solved}/{t.total}</span>
-                  </div>
-                  <Progress value={(t.solved / t.total) * 100} className="h-2" />
-                  {(t.solved / t.total) < 0.4 && <p className="text-xs text-red-400 mt-2">Weak topic - practice more!</p>}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="charts">
-          <Card>
-            <CardContent className="p-6 flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Charts coming soon - integrate Recharts for visual analytics</p>
+                      <span className="shrink-0 text-xs text-muted-foreground">{p.nextRevisionDate}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="patterns" className="space-y-4">
+          <PatternTracker problems={problems} patternTotals={patternTotals} today={todayStr} />
+          <WeakTopics problems={problems} topicCounts={topicCounts} today={todayStr} onSelect={(t) => goToBank({ topic: t })} />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <LearningAnalytics problems={problems} />
+          <CompanyStats problems={problems} onSelect={(c) => goToBank({ company: c })} />
+        </TabsContent>
+
+        <TabsContent value="prep">
+          <PrepMode problems={problems} today={todayStr} onAddQuestion={async (q) => { await handleBankMarkSolved(q); }} onOpenProblem={(p) => openDrawer(p, null)} />
+        </TabsContent>
+
+        <TabsContent value="journal">
+          <JournalPanel />
+        </TabsContent>
+
+        <TabsContent value="problems" className="space-y-4">
+          <Card className="glass-hover">
+            <CardContent className="p-4">
+              <SmartSearch state={smartSearch} onChange={setSmartSearch} resultCount={filteredProblems.length} />
+            </CardContent>
+          </Card>
+
+          <div className="space-y-2">
+            {filteredProblems.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No problems match your search.</p>
+            ) : (
+              filteredProblems.map((p, i) => (
+                <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}>
+                  <Card className="glass-hover">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <button type="button" className="flex min-w-0 items-center gap-4 text-left" onClick={() => openDrawer(p, null)}>
+                          <Badge className={getDifficultyColor(p.difficulty)}>{p.difficulty}</Badge>
+                          <div className="min-w-0">
+                            <p className="font-medium">{p.name}</p>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground mt-1">
+                              <span>{p.topic || "Untagged"}</span>
+                              <span>·</span>
+                              <span>{p.pattern || "No pattern"}</span>
+                              <span>·</span>
+                              <span>{p.timeTaken}m</span>
+                              {p.nextRevisionDate && (
+                                <>
+                                  <span>·</span>
+                                  <span className={cn(p.nextRevisionDate <= todayStr ? "text-red-400" : "")}>Revision {p.nextRevisionDate}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <ConfidenceStars value={p.confidence ?? 0} size="sm" />
+                          {BOOKMARK_DEFS.slice(0, 1).map(({ key, label }) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => handleToggleBookmark(p.id, key)}
+                              className={cn("flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors", p[key] ? "border-yellow-400/40 bg-yellow-400/10 text-yellow-400" : "border-border text-muted-foreground hover:bg-accent")}
+                              title={label}
+                            >
+                              <Star className={cn("h-3 w-3", p[key] && "fill-yellow-400")} />
+                            </button>
+                          ))}
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleRevision(p.id)}>
+                            <Brain className={`h-4 w-4 ${p.needsRevision ? "text-orange-400" : "text-muted-foreground"}`} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteProblem(p.id)}>
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -615,6 +801,17 @@ export default function LeetcodePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <QuestionDrawer
+        open={drawer !== null}
+        problem={drawer?.problem ?? null}
+        question={drawer?.question ?? null}
+        onClose={() => setDrawer(null)}
+        onMarkSolved={handleDrawerMarkSolved}
+        onMarkRevision={handleMarkRevised}
+        onUpdateProblem={handleUpdateProblem}
+        onToggleBookmark={handleToggleBookmark}
+      />
     </div>
   )
 }
