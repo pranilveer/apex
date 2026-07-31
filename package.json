@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "echo No seed script configured"
+    "db:seed": "echo No seed script configured",
+    "db:seed:leetcode": "node scripts/seed-leetcode.js"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.3",

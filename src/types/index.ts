@@ -35,6 +35,19 @@ export interface LeetCodeProblem {
   needsRevision: boolean
   companyTags: string[]
   notes: string
+  slug?: string
+  frontendId?: number
+}
+
+export interface LeetCodeQuestion {
+  id: string
+  frontendId: number
+  title: string
+  slug: string
+  difficulty: "Easy" | "Medium" | "Hard"
+  topics: string[]
+  url: string
+  isPremium?: boolean
 }
 
 export interface GitHubActivity {

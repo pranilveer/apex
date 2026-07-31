@@ -60,7 +60,29 @@ export async function findMany<T>(collection: string, query: Record<string, unkn
   const userId = await getUserId()
   const col = await getCollection(collection)
   const docs = await col.find({ userId, ...query }).sort({ _id: -1 }).toArray()
-  return docs.map(({ _id, ...rest }) => rest) as unknown as T[]
+  return docs.map(({ _id, ...rest }) => ({ ...rest, id: String(_id) })) as unknown as T[]
+}
+
+export async function findManyGlobal<T>(
+  collection: string,
+  query: Record<string, unknown> = {},
+  sort: Record<string, 1 | -1> = { _id: -1 },
+  limit = 0,
+  skip = 0
+): Promise<T[]> {
+  const col = await getCollection(collection)
+  const docs = await col.find(query).sort(sort).skip(skip).limit(limit).toArray()
+  return docs.map(({ _id, ...rest }) => ({ ...rest, id: String(_id) })) as unknown as T[]
+}
+
+export async function countDocumentsGlobal(collection: string, query: Record<string, unknown> = {}): Promise<number> {
+  const col = await getCollection(collection)
+  return col.countDocuments(query)
+}
+
+export async function distinctGlobal(collection: string, field: string, query: Record<string, unknown> = {}): Promise<string[]> {
+  const col = await getCollection(collection)
+  return col.distinct(field, query)
 }
 
 export async function findOne<T>(collection: string, query: Record<string, unknown> = {}): Promise<T | null> {
@@ -69,7 +91,7 @@ export async function findOne<T>(collection: string, query: Record<string, unkno
   const doc = await col.findOne({ userId, ...query })
   if (!doc) return null
   const { _id, ...rest } = doc as unknown as Record<string, unknown>
-  return rest as unknown as T
+  return { ...rest, id: String(_id) } as unknown as T
 }
 
 export async function insertOne(collection: string, doc: Record<string, unknown>): Promise<string> {

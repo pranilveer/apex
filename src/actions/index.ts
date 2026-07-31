@@ -1,6 +1,6 @@
 "use server"
 
-import { getUserId, findMany, findOne, insertOne, updateOne, deleteOne, replaceOne } from "@/lib/db-actions"
+import { getUserId, findMany, findOne, insertOne, updateOne, deleteOne, replaceOne, findManyGlobal, countDocumentsGlobal, distinctGlobal } from "@/lib/db-actions"
 import { generateId } from "@/lib/utils"
 
 export async function fetchGoals() {
@@ -48,6 +48,89 @@ export async function toggleRevision(problemId: string, needsRevision: boolean) 
 
 export async function deleteLeetCodeProblem(id: string) {
   await deleteOne("leetcode_problems", id)
+}
+
+export async function fetchLeetCodeQuestions(params: { search?: string; difficulty?: string; topic?: string; limit?: number; skip?: number } = {}): Promise<{ questions: import("@/types").LeetCodeQuestion[]; total: number }> {
+  const { search, difficulty, topic, limit = 50, skip = 0 } = params
+  const query: Record<string, unknown> = {}
+  if (search && search.trim()) query.title = { $regex: search.trim(), $options: "i" }
+  if (difficulty && difficulty !== "All") query.difficulty = difficulty
+  if (topic && topic !== "All") query.topics = topic
+
+  const [questions, total] = await Promise.all([
+    findManyGlobal<import("@/types").LeetCodeQuestion>("leetcode_questions", query, { frontendId: 1 }, limit, skip),
+    countDocumentsGlobal("leetcode_questions", query),
+  ])
+  return { questions, total }
+}
+
+export async function fetchLeetCodeTopics(): Promise<string[]> {
+  const topics = await distinctGlobal("leetcode_questions", "topics")
+  return topics.filter(Boolean).sort((a, b) => a.localeCompare(b))
+}
+
+export async function fetchLeetCodeQuestionById(id: string): Promise<import("@/types").LeetCodeQuestion | null> {
+  const { ObjectId } = await import("mongodb")
+  if (!ObjectId.isValid(id)) throw new Error("Invalid question id")
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const doc = await db.collection("leetcode_questions").findOne({ _id: new ObjectId(id) })
+  if (!doc) return null
+  const { _id, ...rest } = doc as unknown as Record<string, unknown>
+  return { id, ...rest } as unknown as import("@/types").LeetCodeQuestion
+}
+
+export async function fetchDailyLeetCodeSolved(): Promise<import("@/types").LeetCodeProblem[]> {
+  const date = getTodayDateString()
+  return findMany<import("@/types").LeetCodeProblem>("leetcode_problems", { solvedDate: date })
+}
+
+export async function fetchRandomUnsolvedLeetCodeQuestion(): Promise<import("@/types").LeetCodeQuestion | null> {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const solved = await db.collection("leetcode_problems").find({ userId, slug: { $exists: true, $ne: "" } }).project({ slug: 1 }).toArray()
+  const excluded = [...new Set(solved.map((s) => s.slug).filter(Boolean))]
+  const query: Record<string, unknown> = excluded.length > 0 ? { slug: { $nin: excluded } } : {}
+  const total = await countDocumentsGlobal("leetcode_questions", query)
+  if (total === 0) return null
+
+  const docs = await db.collection("leetcode_questions").aggregate([
+    { $match: query },
+    { $sample: { size: 1 } },
+  ]).toArray()
+  if (docs.length === 0) return null
+  const { _id, ...rest } = docs[0] as unknown as Record<string, unknown>
+  return { id: String(_id), ...rest } as unknown as import("@/types").LeetCodeQuestion
+}
+
+export async function markLeetCodeQuestionSolved(questionId: string, data: { timeTaken?: number; notes?: string } = {}): Promise<import("@/types").LeetCodeProblem | null> {
+  const question = await fetchLeetCodeQuestionById(questionId)
+  if (!question) throw new Error("Question not found")
+  const date = getTodayDateString()
+
+  const existing = await findOne<import("@/types").LeetCodeProblem>("leetcode_problems", { slug: question.slug, solvedDate: date })
+  if (existing) {
+    await updateOne("leetcode_problems", existing.id as unknown as string, { timeTaken: data.timeTaken ?? existing.timeTaken, notes: data.notes ?? existing.notes } as unknown as Record<string, unknown>)
+    return { ...existing, timeTaken: data.timeTaken ?? existing.timeTaken, notes: data.notes ?? existing.notes }
+  }
+
+  const problem: import("@/types").LeetCodeProblem = {
+    id: generateId(),
+    name: question.title,
+    difficulty: question.difficulty,
+    topic: question.topics[0] || "",
+    pattern: "",
+    solvedDate: date,
+    timeTaken: data.timeTaken ?? 0,
+    needsRevision: false,
+    companyTags: [],
+    notes: data.notes ?? "",
+    slug: question.slug,
+    frontendId: question.frontendId,
+  }
+  const rest = { ...problem } as unknown as Record<string, unknown>
+  delete rest.id
+  await insertOne("leetcode_problems", rest)
+  return problem
 }
 
 export async function fetchGitHubActivities() {
@@ -109,7 +192,7 @@ export async function addStatusHistory(jobId: string, entry: import("@/types").S
   const { ObjectId } = await import("mongodb")
   await db.collection("jobs").updateOne(
     { _id: new ObjectId(jobId), userId },
-    { $push: { statusHistory: entry }, $set: { updatedAt: new Date().toISOString() } } as any
+    { $push: { statusHistory: entry }, $set: { updatedAt: new Date().toISOString() } } as Record<string, unknown>
   )
 }
 
@@ -119,7 +202,7 @@ export async function addInterview(jobId: string, interview: import("@/types").I
   const { ObjectId } = await import("mongodb")
   await db.collection("jobs").updateOne(
     { _id: new ObjectId(jobId), userId },
-    { $push: { interviews: interview }, $set: { updatedAt: new Date().toISOString() } } as any
+    { $push: { interviews: interview }, $set: { updatedAt: new Date().toISOString() } } as Record<string, unknown>
   )
 }
 
@@ -133,7 +216,7 @@ export async function updateInterview(jobId: string, interviewId: string, data: 
   }
   await db.collection("jobs").updateOne(
     { _id: new ObjectId(jobId), userId, "interviews.id": interviewId },
-    { $set: updates } as any
+    { $set: updates } as Record<string, unknown>
   )
 }
 
@@ -143,7 +226,7 @@ export async function deleteInterview(jobId: string, interviewId: string) {
   const { ObjectId } = await import("mongodb")
   await db.collection("jobs").updateOne(
     { _id: new ObjectId(jobId), userId },
-    { $pull: { interviews: { id: interviewId } }, $set: { updatedAt: new Date().toISOString() } } as any
+    { $pull: { interviews: { id: interviewId } }, $set: { updatedAt: new Date().toISOString() } } as Record<string, unknown>
   )
 }
 
@@ -153,7 +236,7 @@ export async function addFollowUp(jobId: string, followUp: import("@/types").Fol
   const { ObjectId } = await import("mongodb")
   await db.collection("jobs").updateOne(
     { _id: new ObjectId(jobId), userId },
-    { $push: { followUps: followUp }, $set: { updatedAt: new Date().toISOString() } } as any
+    { $push: { followUps: followUp }, $set: { updatedAt: new Date().toISOString() } } as Record<string, unknown>
   )
 }
 
@@ -163,7 +246,7 @@ export async function updateFollowUp(jobId: string, followUpId: string, data: Pa
   const { ObjectId } = await import("mongodb")
   await db.collection("jobs").updateOne(
     { _id: new ObjectId(jobId), userId, "followUps.id": followUpId },
-    { $set: Object.entries(data).reduce((acc, [key, val]) => ({ ...acc, [`followUps.$.${key}`]: val }), { updatedAt: new Date().toISOString() as string } as Record<string, unknown>) } as any
+    { $set: Object.entries(data).reduce((acc, [key, val]) => ({ ...acc, [`followUps.$.${key}`]: val }), { updatedAt: new Date().toISOString() as string } as Record<string, unknown>) } as Record<string, unknown>
   )
 }
 

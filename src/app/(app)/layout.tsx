@@ -1,4 +1,5 @@
 "use client"
+import { useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { CommandPalette } from "@/components/layout/command-palette"
@@ -9,7 +10,15 @@ import { useAppStore } from "@/stores/app-store"
 import { cn } from "@/lib/utils"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { sidebarOpen } = useAppStore()
+  const { sidebarOpen, setSidebarOpen } = useAppStore()
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)")
+    const apply = (e: MediaQueryListEvent | MediaQueryList) => setSidebarOpen(e.matches)
+    apply(mq)
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+  }, [setSidebarOpen])
 
   return (
     <Providers>
