@@ -74,6 +74,14 @@ export interface LeetCodeProblem {
   isCompanyFavorite?: boolean
 }
 
+export interface LeetCodeAccount {
+  id: string
+  username: string
+  lastSyncAt?: string
+  syncedSlugs?: string[]
+  lastError?: string
+}
+
 export type JournalMood = "Great" | "Good" | "Okay" | "Tired" | "Stressed"
 
 export interface LeetCodeJournal {

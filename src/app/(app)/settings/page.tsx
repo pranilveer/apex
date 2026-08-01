@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { LeetCodeAccountCard } from "@/components/leetcode/leetcode-account"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
@@ -111,6 +112,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="data" className="space-y-4">
+          <LeetCodeAccountCard />
           <Card>
             <CardHeader><CardTitle className="text-base">Data Management</CardTitle></CardHeader>
             <CardContent className="space-y-4">

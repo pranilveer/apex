@@ -27,6 +27,8 @@ import {
   toggleLeetCodeBookmark, fetchLeetCodeQuestions, fetchLeetCodeTopics, fetchLeetCodeTopicCounts, fetchLeetCodePatternTotals, fetchDailyChallenge,
 } from "@/actions"
 import type { BookmarkKey, LeetCodeProblem, LeetCodeQuestion, RevisionMode } from "@/types"
+import { getLeetCodeAccount, syncLeetCodeSolutions } from "@/actions/leetcode-sync"
+import { LeetCodeAccountCard } from "@/components/leetcode/leetcode-account"
 import { Heatmap } from "@/components/leetcode/heatmap"
 import { RevisionList } from "@/components/leetcode/revision-list"
 import { DailyChallenge, type DailyChallengeData } from "@/components/leetcode/daily-challenge"
@@ -93,6 +95,23 @@ export default function LeetcodePage() {
     })
     fetchLeetCodePatternTotals().then(setPatternTotals)
     fetchDailyChallenge().then(setChallenge)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const tz = typeof window !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
+    getLeetCodeAccount()
+      .then((acc) => {
+        if (!acc || cancelled) return
+        const last = acc.lastSyncAt ? new Date(acc.lastSyncAt).getTime() : 0
+        if (Date.now() - last >= 10 * 60 * 1000) {
+          syncLeetCodeSolutions(tz).catch(() => {})
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -419,6 +438,8 @@ export default function LeetcodePage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <LeetCodeAccountCard />
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
         <Card className="glass-hover p-0"><CardContent className="p-3 sm:p-4 text-center"><p className="text-xl sm:text-2xl md:text-3xl font-bold">{problems.length}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Total Solved</p></CardContent></Card>
