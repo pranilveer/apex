@@ -5,7 +5,7 @@ import { signOut } from "next-auth/react"
 import { useTheme } from "@/components/layout/providers"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/app-store"
-import { getGreeting } from "@/lib/utils"
+import { getGreeting, cn } from "@/lib/utils"
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -43,7 +43,7 @@ export function Header() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="min-w-0 hidden md:block">
+        <div className={cn("min-w-0 hidden md:block", !sidebarOpen && "md:pl-10")}>
           <h1 className="text-xl font-semibold truncate">{title}</h1>
           <p className="text-xs text-muted-foreground">{getGreeting()}</p>
         </div>
