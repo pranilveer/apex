@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import dynamic from "next/dynamic"
 import {
   Plus, Flame, CheckCircle2, Brain, ExternalLink, Trash2, Search, Dices,
-  Clock, Loader2, TrendingUp, Star,
+  Clock, Loader2, TrendingUp, Star, RotateCcw,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -421,23 +421,23 @@ export default function LeetcodePage() {
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold">{problems.length}</p><p className="text-xs text-muted-foreground">Total Solved</p></CardContent></Card>
-        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{easy}</p><p className="text-xs text-muted-foreground">Easy</p></CardContent></Card>
-        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-yellow-400">{medium}</p><p className="text-xs text-muted-foreground">Medium</p></CardContent></Card>
-        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-red-400">{hard}</p><p className="text-xs text-muted-foreground">Hard</p></CardContent></Card>
-        <Card className="glass-hover p-0 col-span-2 sm:col-span-1"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-orange-400">{revision}</p><p className="text-xs text-muted-foreground">Need Revision</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-3 sm:p-4 text-center"><p className="text-xl sm:text-2xl md:text-3xl font-bold">{problems.length}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Total Solved</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-3 sm:p-4 text-center"><p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-400">{easy}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Easy</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-3 sm:p-4 text-center"><p className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-400">{medium}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Medium</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-3 sm:p-4 text-center"><p className="text-xl sm:text-2xl md:text-3xl font-bold text-red-400">{hard}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Hard</p></CardContent></Card>
+        <Card className="glass-hover p-0 col-span-2 sm:col-span-1"><CardContent className="p-3 sm:p-4 text-center"><p className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-400">{revision}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Need Revision</p></CardContent></Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="w-full justify-start overflow-x-auto sm:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger value="today">Today</TabsTrigger>
-          <TabsTrigger value="bank">Question Bank</TabsTrigger>
-          <TabsTrigger value="revision">Revision</TabsTrigger>
-          <TabsTrigger value="patterns">Patterns</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="prep">Prep</TabsTrigger>
-          <TabsTrigger value="journal">Journal</TabsTrigger>
-          <TabsTrigger value="problems">Problems</TabsTrigger>
+        <TabsList className="w-full justify-start overflow-x-auto gap-1 sm:justify-between [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="today" className="sm:flex-1">Today</TabsTrigger>
+          <TabsTrigger value="bank" className="sm:flex-1">Question Bank</TabsTrigger>
+          <TabsTrigger value="revision" className="sm:flex-1">Revision</TabsTrigger>
+          <TabsTrigger value="patterns" className="sm:flex-1">Patterns</TabsTrigger>
+          <TabsTrigger value="analytics" className="sm:flex-1">Analytics</TabsTrigger>
+          <TabsTrigger value="prep" className="sm:flex-1">Prep</TabsTrigger>
+          <TabsTrigger value="journal" className="sm:flex-1">Journal</TabsTrigger>
+          <TabsTrigger value="problems" className="sm:flex-1">Problems</TabsTrigger>
         </TabsList>
 
         {actionError && (
@@ -448,18 +448,18 @@ export default function LeetcodePage() {
         )}
 
         <TabsContent value="today" className="space-y-4">
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
-            <Card className="glass-hover"><CardContent className="p-4 flex items-center gap-3">
-              <Flame className="h-8 w-8 text-orange-400" />
-              <div><p className="text-2xl font-bold">{streak}</p><p className="text-xs text-muted-foreground">Day Streak</p></div>
+          <div className="grid gap-2 sm:gap-4 grid-cols-3">
+            <Card className="glass-hover"><CardContent className="p-2 sm:p-4 flex flex-col items-center gap-1 text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
+              <Flame className="h-6 w-6 sm:h-8 sm:w-8 text-orange-400 shrink-0" />
+              <div><p className="text-lg sm:text-2xl font-bold">{streak}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Day Streak</p></div>
             </CardContent></Card>
-            <Card className="glass-hover"><CardContent className="p-4 flex items-center gap-3">
-              <CheckCircle2 className="h-8 w-8 text-green-400" />
-              <div><p className="text-2xl font-bold">{todaySolved.length}</p><p className="text-xs text-muted-foreground">Solved Today</p></div>
+            <Card className="glass-hover"><CardContent className="p-2 sm:p-4 flex flex-col items-center gap-1 text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
+              <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-400 shrink-0" />
+              <div><p className="text-lg sm:text-2xl font-bold">{todaySolved.length}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Solved Today</p></div>
             </CardContent></Card>
-            <Card className="glass-hover"><CardContent className="p-4 flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-blue-400" />
-              <div><p className="text-2xl font-bold">{solvedThisWeek}</p><p className="text-xs text-muted-foreground">Solved This Week</p></div>
+            <Card className="glass-hover"><CardContent className="p-2 sm:p-4 flex flex-col items-center gap-1 text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
+              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 shrink-0" />
+              <div><p className="text-lg sm:text-2xl font-bold">{solvedThisWeek}</p><p className="text-[11px] sm:text-xs text-muted-foreground">Solved This Week</p></div>
             </CardContent></Card>
           </div>
 
@@ -585,6 +585,11 @@ export default function LeetcodePage() {
                     {COMPANY_NAMES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                {(bankSearch || bankDifficulty !== "All" || bankTopic !== "All" || bankCompany) && (
+                  <Button variant="outline" onClick={() => { setBankSearch(""); setBankDifficulty("All"); setBankTopic("All"); setBankCompany("") }} className="gap-1.5">
+                    <RotateCcw className="h-3.5 w-3.5" />Reset
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
