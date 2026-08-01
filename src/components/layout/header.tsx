@@ -1,36 +1,13 @@
 "use client"
-import { usePathname } from "next/navigation"
 import { Search, Command, Menu, Moon, Sun, LogOut } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useTheme } from "@/components/layout/providers"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/app-store"
-import { getGreeting, cn } from "@/lib/utils"
-
-const pageTitles: Record<string, string> = {
-  "/": "Dashboard",
-  "/goals": "Goals",
-  "/leetcode": "LeetCode Tracker",
-  "/github": "GitHub Tracker",
-  "/projects": "Project Tracker",
-  "/interview": "Interview Preparation",
-  "/journal": "Daily Journal",
-  "/habits": "Habit Tracker",
-  "/jobs": "Job Switch Dashboard",
-  "/resumes": "Resume Tracker",
-  "/resources": "Resource Library",
-  "/analytics": "Analytics",
-  "/notifications": "Notifications",
-  "/gamification": "Gamification",
-  "/ai-coach": "AI Coach",
-  "/settings": "Settings",
-}
 
 export function Header() {
-  const pathname = usePathname()
   const { setCommandOpen, sidebarOpen, setSidebarOpen } = useAppStore()
   const { theme, setTheme } = useTheme()
-  const title = pageTitles[pathname] || "Dashboard"
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 backdrop-blur-xl px-3 md:px-6 md:h-16">
@@ -43,10 +20,6 @@ export function Header() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className={cn("min-w-0 hidden md:block", !sidebarOpen && "md:pl-10")}>
-          <h1 className="text-xl font-semibold truncate">{title}</h1>
-          <p className="text-xs text-muted-foreground">{getGreeting()}</p>
-        </div>
       </div>
       <div className="flex items-center gap-1 md:gap-2 shrink-0">
         <Button
