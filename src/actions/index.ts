@@ -51,8 +51,8 @@ export async function deleteLeetCodeProblem(id: string) {
   await deleteOne("leetcode_problems", id)
 }
 
-export async function fetchLeetCodeQuestions(params: { search?: string; difficulty?: string; topic?: string; topics?: string[]; limit?: number; skip?: number } = {}): Promise<{ questions: import("@/types").LeetCodeQuestion[]; total: number }> {
-  const { search, difficulty, topic, topics, limit = 50, skip = 0 } = params
+export async function fetchLeetCodeQuestions(params: { search?: string; difficulty?: string; topic?: string; topics?: string[]; limit?: number; skip?: number; solved?: "all" | "solved" | "unsolved" } = {}): Promise<{ questions: import("@/types").LeetCodeQuestion[]; total: number }> {
+  const { search, difficulty, topic, topics, limit = 50, skip = 0, solved = "all" } = params
   const query: Record<string, unknown> = {}
   if (search && search.trim()) {
     const q = search.trim()
@@ -65,6 +65,23 @@ export async function fetchLeetCodeQuestions(params: { search?: string; difficul
   if (difficulty && difficulty !== "All") query.difficulty = difficulty
   if (topic && topic !== "All") query.topics = topic
   if (topics && topics.length > 0) query.topics = { $in: topics }
+
+  if (solved && solved !== "all") {
+    const userId = await getUserId()
+    const db = await (await import("@/lib/mongodb")).getDb()
+    const solvedDocs = await db
+      .collection("leetcode_problems")
+      .find({ userId, slug: { $exists: true, $ne: "" } })
+      .project({ slug: 1 })
+      .toArray()
+    const solvedSlugs = [...new Set(solvedDocs.map((s) => s.slug as string).filter(Boolean))]
+    if (solved === "solved") {
+      if (solvedSlugs.length === 0) return { questions: [], total: 0 }
+      query.slug = { $in: solvedSlugs }
+    } else {
+      query.slug = { $nin: solvedSlugs }
+    }
+  }
 
   const [questions, total] = await Promise.all([
     findManyGlobal<import("@/types").LeetCodeQuestion>("leetcode_questions", query, { frontendId: 1 }, limit, skip),

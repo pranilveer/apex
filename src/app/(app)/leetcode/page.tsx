@@ -71,6 +71,8 @@ export default function LeetcodePage() {
   const [bankDifficulty, setBankDifficulty] = useState("All")
   const [bankTopic, setBankTopic] = useState("All")
   const [bankCompany, setBankCompany] = useState("")
+  const [bankSolved, setBankSolved] = useState<"all" | "solved" | "unsolved">("all")
+  const [bankVersion, setBankVersion] = useState(0)
   const [bankQuestions, setBankQuestions] = useState<LeetCodeQuestion[]>([])
   const [bankTotal, setBankTotal] = useState(0)
   const [bankLoading, setBankLoading] = useState(false)
@@ -119,7 +121,7 @@ export default function LeetcodePage() {
       bankSkipRef.current = 0
       setBankLoading(true)
       const topicsQuery = bankCompany ? COMPANY_TOPICS[bankCompany] : undefined
-      fetchLeetCodeQuestions({ search: bankSearch, difficulty: bankDifficulty, topic: bankTopic, topics: topicsQuery, limit: BANK_LIMIT, skip: 0 })
+      fetchLeetCodeQuestions({ search: bankSearch, difficulty: bankDifficulty, topic: bankTopic, topics: topicsQuery, solved: bankSolved, limit: BANK_LIMIT, skip: 0 })
         .then(({ questions, total }) => {
           setBankQuestions(questions)
           setBankTotal(total)
@@ -128,7 +130,7 @@ export default function LeetcodePage() {
         .catch(() => setBankLoading(false))
     }, bankSearch ? 300 : 0)
     return () => clearTimeout(timer)
-  }, [bankSearch, bankDifficulty, bankTopic, bankCompany])
+  }, [bankSearch, bankDifficulty, bankTopic, bankCompany, bankSolved, bankVersion])
 
   useEffect(() => {
     if (!addOpen) return
@@ -274,6 +276,7 @@ export default function LeetcodePage() {
     setActionError("")
     try {
       await markSolvedAndReload(q)
+      setBankVersion((v) => v + 1)
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to mark as solved")
     }
@@ -284,6 +287,7 @@ export default function LeetcodePage() {
     try {
       await markSolvedAndReload(q)
       setAddSearch("")
+      setBankVersion((v) => v + 1)
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Failed to add question")
     }
@@ -578,7 +582,7 @@ export default function LeetcodePage() {
                 </div>
                 <Clock className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 <div className="relative col-span-2 sm:col-span-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input className="pl-10" placeholder="Search questions..." value={bankSearch} onChange={(e) => setBankSearch(e.target.value)} />
@@ -606,8 +610,16 @@ export default function LeetcodePage() {
                     {COMPANY_NAMES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                {(bankSearch || bankDifficulty !== "All" || bankTopic !== "All" || bankCompany) && (
-                  <Button variant="outline" onClick={() => { setBankSearch(""); setBankDifficulty("All"); setBankTopic("All"); setBankCompany("") }} className="gap-1.5">
+                <Select value={bankSolved} onValueChange={(v) => setBankSolved(v as "all" | "solved" | "unsolved")}>
+                  <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="solved">Solved</SelectItem>
+                    <SelectItem value="unsolved">Unsolved</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(bankSearch || bankDifficulty !== "All" || bankTopic !== "All" || bankCompany || bankSolved !== "all") && (
+                  <Button variant="outline" onClick={() => { setBankSearch(""); setBankDifficulty("All"); setBankTopic("All"); setBankCompany(""); setBankSolved("all") }} className="gap-1.5">
                     <RotateCcw className="h-3.5 w-3.5" />Reset
                   </Button>
                 )}
