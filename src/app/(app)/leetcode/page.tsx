@@ -411,14 +411,16 @@ export default function LeetcodePage() {
           <p className="text-muted-foreground text-sm">Track your problem solving journey</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
+          {/* Add Problem button — commented out for now (mobile) */}
+          {/* <DialogTrigger asChild>
             <Button size="icon" className="h-9 w-9 shrink-0 md:hidden" aria-label="Add Problem">
               <Plus className="h-5 w-5" />
             </Button>
-          </DialogTrigger>
-          <DialogTrigger asChild>
+          </DialogTrigger> */}
+          {/* Add Problem button — commented out for now (desktop) */}
+          {/* <DialogTrigger asChild>
             <Button className="hidden md:inline-flex gap-2"><Plus className="h-4 w-4" />Add Problem</Button>
-          </DialogTrigger>
+          </DialogTrigger> */}
           <DialogContent className="glass border-border/50 p-4 sm:p-6">
             <DialogHeader><DialogTitle className="text-base sm:text-lg">Add Problem</DialogTitle></DialogHeader>
             <div className="space-y-3 sm:space-y-4">
