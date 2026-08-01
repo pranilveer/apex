@@ -382,33 +382,38 @@ export default function LeetcodePage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-xl md:text-2xl font-bold">LeetCode Tracker</h2>
           <p className="text-muted-foreground text-sm">Track your problem solving journey</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="h-4 w-4" />Add Problem</Button>
+            <Button size="icon" className="h-9 w-9 shrink-0 md:hidden" aria-label="Add Problem">
+              <Plus className="h-5 w-5" />
+            </Button>
           </DialogTrigger>
-          <DialogContent className="glass border-border/50">
-            <DialogHeader><DialogTitle>Add Problem</DialogTitle></DialogHeader>
-            <div className="space-y-4">
-              <div><Label>Problem Name</Label><Input value={newProblem.name} onChange={(e) => setNewProblem({ ...newProblem, name: e.target.value })} placeholder="Two Sum" /></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><Label>Difficulty</Label>
-                  <select className="flex h-10 w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm" value={newProblem.difficulty} onChange={(e) => setNewProblem({ ...newProblem, difficulty: e.target.value as "Easy" | "Medium" | "Hard" })}>
+          <DialogTrigger asChild>
+            <Button className="hidden md:inline-flex gap-2"><Plus className="h-4 w-4" />Add Problem</Button>
+          </DialogTrigger>
+          <DialogContent className="glass border-border/50 p-4 sm:p-6">
+            <DialogHeader><DialogTitle className="text-base sm:text-lg">Add Problem</DialogTitle></DialogHeader>
+            <div className="space-y-3 sm:space-y-4">
+              <div><Label className="text-xs sm:text-sm">Problem Name</Label><Input className="h-9 sm:h-10" value={newProblem.name} onChange={(e) => setNewProblem({ ...newProblem, name: e.target.value })} placeholder="Two Sum" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div><Label className="text-xs sm:text-sm">Difficulty</Label>
+                  <select className="flex h-9 sm:h-10 w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm" value={newProblem.difficulty} onChange={(e) => setNewProblem({ ...newProblem, difficulty: e.target.value as "Easy" | "Medium" | "Hard" })}>
                     <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
                   </select>
                 </div>
-                <div><Label>Topic</Label><Input value={newProblem.topic} onChange={(e) => setNewProblem({ ...newProblem, topic: e.target.value })} placeholder="Arrays" /></div>
+                <div><Label className="text-xs sm:text-sm">Topic</Label><Input className="h-9 sm:h-10" value={newProblem.topic} onChange={(e) => setNewProblem({ ...newProblem, topic: e.target.value })} placeholder="Arrays" /></div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><Label>Pattern</Label><Input value={newProblem.pattern} onChange={(e) => setNewProblem({ ...newProblem, pattern: e.target.value })} placeholder="Two Pointer" /></div>
-                <div><Label>Time (min)</Label><Input type="number" value={newProblem.timeTaken || ""} onChange={(e) => setNewProblem({ ...newProblem, timeTaken: Number(e.target.value) })} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div><Label className="text-xs sm:text-sm">Pattern</Label><Input className="h-9 sm:h-10" value={newProblem.pattern} onChange={(e) => setNewProblem({ ...newProblem, pattern: e.target.value })} placeholder="Two Pointer" /></div>
+                <div><Label className="text-xs sm:text-sm">Time (min)</Label><Input className="h-9 sm:h-10" type="number" value={newProblem.timeTaken || ""} onChange={(e) => setNewProblem({ ...newProblem, timeTaken: Number(e.target.value) })} /></div>
               </div>
-              <div><Label>Company Tags (comma separated)</Label><Input value={newProblem.companyTags} onChange={(e) => setNewProblem({ ...newProblem, companyTags: e.target.value })} placeholder="Google, Amazon" /></div>
-              <div><Label>Notes</Label><Textarea value={newProblem.notes} onChange={(e) => setNewProblem({ ...newProblem, notes: e.target.value })} /></div>
+              <div><Label className="text-xs sm:text-sm">Company Tags (comma separated)</Label><Input className="h-9 sm:h-10" value={newProblem.companyTags} onChange={(e) => setNewProblem({ ...newProblem, companyTags: e.target.value })} placeholder="Google, Amazon" /></div>
+              <div><Label className="text-xs sm:text-sm">Notes</Label><Textarea className="min-h-[64px] sm:min-h-[80px]" value={newProblem.notes} onChange={(e) => setNewProblem({ ...newProblem, notes: e.target.value })} /></div>
               <Button onClick={handleAdd} className="w-full">Add Problem</Button>
             </div>
           </DialogContent>
@@ -416,11 +421,11 @@ export default function LeetcodePage() {
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-        <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold">{problems.length}</p><p className="text-xs text-muted-foreground">Total Solved</p></CardContent></Card>
-        <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{easy}</p><p className="text-xs text-muted-foreground">Easy</p></CardContent></Card>
-        <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-yellow-400">{medium}</p><p className="text-xs text-muted-foreground">Medium</p></CardContent></Card>
-        <Card className="glass-hover"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-red-400">{hard}</p><p className="text-xs text-muted-foreground">Hard</p></CardContent></Card>
-        <Card className="glass-hover col-span-2 sm:col-span-1"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-orange-400">{revision}</p><p className="text-xs text-muted-foreground">Need Revision</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold">{problems.length}</p><p className="text-xs text-muted-foreground">Total Solved</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-green-400">{easy}</p><p className="text-xs text-muted-foreground">Easy</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-yellow-400">{medium}</p><p className="text-xs text-muted-foreground">Medium</p></CardContent></Card>
+        <Card className="glass-hover p-0"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-red-400">{hard}</p><p className="text-xs text-muted-foreground">Hard</p></CardContent></Card>
+        <Card className="glass-hover p-0 col-span-2 sm:col-span-1"><CardContent className="p-4 text-center"><p className="text-3xl font-bold text-orange-400">{revision}</p><p className="text-xs text-muted-foreground">Need Revision</p></CardContent></Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -543,7 +548,7 @@ export default function LeetcodePage() {
         </TabsContent>
 
         <TabsContent value="bank" className="space-y-4">
-          <Card className="glass-hover">
+          <Card className="glass-hover p-0">
             <CardContent className="p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -594,7 +599,7 @@ export default function LeetcodePage() {
                 const solved = bankProblemFor(q)
                 return (
                   <motion.div key={q.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.4) }}>
-                    <Card className="glass-hover">
+                    <Card className="glass-hover p-0">
                       <CardContent className="p-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <button type="button" className="flex items-start gap-3 text-left" onClick={() => openDrawer(solved, q)}>
