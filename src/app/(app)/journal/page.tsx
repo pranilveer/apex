@@ -124,7 +124,7 @@ export default function JournalPage() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Calendar className="h-4 w-4 text-primary" />Tomorrow&apos;s Plan</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Calendar className="h-4 w-4 text-primary" />Tomorrow's Plan</CardTitle></CardHeader>
         <CardContent>
           <Textarea value={entry.tomorrowPlan} onChange={(e) => updateField("tomorrowPlan", e.target.value)}
             placeholder="Plan your tomorrow. What will you focus on?" className="min-h-[120px] bg-transparent border-transparent focus:border-border focus:bg-secondary/50" />

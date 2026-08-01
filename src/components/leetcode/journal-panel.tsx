@@ -100,7 +100,7 @@ export function JournalPanel() {
             {field("learned", "What I learned")}
             {field("mistakes", "Mistakes", true)}
             {field("interviewLearnings", "Interview learnings", true)}
-            {field("tomorrowPlan", "Tomorrow&apos;s plan", true)}
+            {field("tomorrowPlan", "Tomorrow's plan", true)}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Mood</Label>
