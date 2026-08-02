@@ -297,4 +297,6 @@ export interface GamificationData {
   longestStreak: number
   dailyScore: number
   badges: string[]
+  badgeAwards?: Record<string, string>
+  lastUpdatedAt?: string
 }
