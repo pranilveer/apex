@@ -281,6 +281,8 @@ export interface Notification {
   type: string
   time: string
   read: boolean
+  refId?: string
+  createdAt?: string
 }
 
 export interface ReminderSetting {

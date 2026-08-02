@@ -7,6 +7,7 @@ import { Providers } from "@/components/layout/providers"
 import { PomodoroTimer } from "@/components/pomodoro/pomodoro-timer"
 import { PomodoroButton } from "@/components/pomodoro/pomodoro-button"
 import { useAppStore } from "@/stores/app-store"
+import { syncNotifications } from "@/actions"
 import { cn } from "@/lib/utils"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     mq.addEventListener("change", apply)
     return () => mq.removeEventListener("change", apply)
   }, [setSidebarOpen])
+
+  useEffect(() => {
+    void syncNotifications(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  }, [])
 
   return (
     <Providers>

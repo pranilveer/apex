@@ -620,10 +620,14 @@ export async function fetchNotifications() {
   return items
 }
 
-export async function addNotification(data: import("@/types").Notification) {
-  const rest = { ...data } as unknown as Record<string, unknown>
-  delete rest.id
-  return insertOne("notifications", rest)
+export async function addNotification(data: { title: string; message: string; type: string }) {
+  return insertOne("notifications", {
+    title: data.title,
+    message: data.message,
+    type: data.type,
+    time: new Date().toISOString(),
+    read: false,
+  })
 }
 
 export async function markNotificationRead(id: string) {
@@ -638,6 +642,27 @@ export async function markAllNotificationsRead() {
 
 export async function deleteNotification(id: string) {
   await deleteOne("notifications", id)
+}
+
+export async function deleteAllNotifications() {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  await db.collection("notifications").deleteMany({ userId })
+}
+
+export async function fetchReminderSettings() {
+  const doc = await findOne<{ settings: import("@/types").ReminderSetting[]; timeZone?: string }>("reminder_settings")
+  return doc ?? null
+}
+
+export async function saveReminderSettings(settings: import("@/types").ReminderSetting[], timeZone?: string) {
+  await replaceOne("reminder_settings", {}, { settings, timeZone })
+}
+
+export async function syncNotifications(timeZone?: string): Promise<number> {
+  const userId = await getUserId()
+  const { generateNotificationsForUser } = await import("@/lib/notifications")
+  return generateNotificationsForUser(userId, timeZone)
 }
 
 async function buildGamificationSnapshot(userId: string): Promise<GamificationSnapshot> {
