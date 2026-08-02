@@ -257,7 +257,7 @@ export default function AICoachPage() {
         </div>
       </div>
 
-      <Card className={`flex flex-col ${fullChat ? "h-[calc(100dvh-6rem)]" : "h-[55vh] min-h-[380px] md:h-[520px]"}`}>
+      <Card className={`flex flex-col ${fullChat ? "h-[calc(100dvh-6rem)] md:h-[calc(100dvh-7rem)]" : "h-[55vh] min-h-[380px] md:h-[520px]"}`}>
         <CardHeader className="border-b border-border shrink-0 flex-row items-center justify-between gap-1.5">
           <CardTitle className="text-base min-w-0 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -266,12 +266,13 @@ export default function AICoachPage() {
           <div className="flex shrink-0 items-center gap-1.5">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground md:hidden"
+              size="sm"
+              className="h-7 px-1.5 md:px-2 text-xs text-muted-foreground"
               onClick={() => setFullChat(!fullChat)}
               title={fullChat ? "Exit full screen" : "Full screen chat"}
             >
               {fullChat ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              <span className="hidden md:inline">{fullChat ? "Exit full screen" : "Full screen"}</span>
             </Button>
             <Badge variant={badge.variant} className="text-xs">{badge.text}</Badge>
             {messages.length > 0 && (
