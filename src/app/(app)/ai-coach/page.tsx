@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { Brain, Sparkles, Send, TrendingUp, Code2, BookOpen, Target, MessageSquare, BarChart3, Square, Trash2, AlertTriangle, User, Bot } from "lucide-react"
+import { Brain, Sparkles, Send, TrendingUp, Code2, BookOpen, Target, MessageSquare, BarChart3, Square, Trash2, AlertTriangle, User, Bot, Maximize2, Minimize2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -120,13 +120,19 @@ export default function AICoachPage() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [needsKey, setNeedsKey] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [fullChat, setFullChat] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const messagesRef = useRef<Message[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
+
+  useEffect(() => {
+    if (fullChat) inputRef.current?.focus()
+  }, [fullChat])
 
   useEffect(() => {
     fetch("/api/ai-coach")
@@ -217,14 +223,14 @@ export default function AICoachPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div>
+      <div className={fullChat ? "hidden" : ""}>
         <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
           <Brain className="h-6 w-6 text-primary" />AI Coach
         </h2>
         <p className="text-muted-foreground text-sm">Your personal AI coach — powered by Groq, aware of your real progress</p>
       </div>
 
-      {needsKey && (
+      {!fullChat && needsKey && (
         <Card className="border-destructive/40 bg-destructive/5">
           <CardContent className="p-4 flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
@@ -236,36 +242,47 @@ export default function AICoachPage() {
         </Card>
       )}
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {prompts.map((p, i) => (
-          <motion.div key={p.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <Card className="glass-hover cursor-pointer" onClick={() => setInput(p.prompt)}>
-              <CardContent className="p-3 text-center">
-                <p.icon className="h-5 w-5 mx-auto mb-2 text-primary" />
-                <p className="text-xs font-medium">{p.label}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+      <div className={fullChat ? "hidden" : ""}>
+        <div className="grid gap-2.5 sm:gap-3 md:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {prompts.map((p, i) => (
+            <motion.div key={p.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <Card className="glass-hover cursor-pointer" onClick={() => setInput(p.prompt)}>
+                <CardContent className="p-2.5 sm:p-3 text-center">
+                  <p.icon className="h-5 w-5 mx-auto mb-1.5 sm:mb-2 text-primary" />
+                  <p className="text-xs font-medium">{p.label}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      <Card className="h-[400px] md:h-[520px] flex flex-col">
-        <CardHeader className="border-b border-border shrink-0 flex-row items-center justify-between gap-2">
-          <CardTitle className="text-base flex items-center gap-2">
+      <Card className={`flex flex-col ${fullChat ? "h-[calc(100dvh-6rem)]" : "h-[55vh] min-h-[380px] md:h-[520px]"}`}>
+        <CardHeader className="border-b border-border shrink-0 flex-row items-center justify-between gap-1.5">
+          <CardTitle className="text-base min-w-0 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             AI Conversation
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground md:hidden"
+              onClick={() => setFullChat(!fullChat)}
+              title={fullChat ? "Exit full screen" : "Full screen chat"}
+            >
+              {fullChat ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            </Button>
             <Badge variant={badge.variant} className="text-xs">{badge.text}</Badge>
             {messages.length > 0 && (
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" onClick={clearChat} title="Clear chat">
-                <Trash2 className="h-3.5 w-3.5" />Clear
+                <Trash2 className="h-3.5 w-3.5" /><span className="hidden sm:inline">Clear</span>
               </Button>
             )}
           </div>
         </CardHeader>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4">
           {!loaded ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading conversation…</div>
           ) : messages.length === 0 ? (
@@ -279,10 +296,10 @@ export default function AICoachPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {messages.map((msg) => (
                 <motion.div key={msg.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[85%] md:max-w-[75%] rounded-xl p-4 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
+                  <div className={`max-w-[90%] sm:max-w-[85%] md:max-w-[75%] rounded-xl p-3 sm:p-4 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
                     <div className="mb-1 flex items-center gap-1.5 text-xs opacity-60">
                       {msg.role === "user" ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                       {msg.role === "user" ? "You" : "AI Coach"}
@@ -304,13 +321,14 @@ export default function AICoachPage() {
           )}
         </div>
 
-        <div className="border-t border-border p-4 shrink-0">
+        <div className="border-t border-border p-3 sm:p-4 shrink-0">
           <div className="flex gap-2">
             <Textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={isStreaming ? "AI is responding…" : "Ask your AI coach anything…"}
-              className="min-h-[60px]"
+              className="min-h-[48px] sm:min-h-[60px]"
               disabled={isStreaming}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -326,7 +344,7 @@ export default function AICoachPage() {
               </Button>
             )}
           </div>
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">Responses are generated live from your tracked data · Enter to send, Shift+Enter for a new line</p>
+          <p className="mt-2 hidden sm:block text-center text-[11px] text-muted-foreground">Responses are generated live from your tracked data · Enter to send, Shift+Enter for a new line</p>
         </div>
       </Card>
     </div>
