@@ -1,29 +1,59 @@
 "use client"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Trophy, Flame, Zap, Crown, Award, TrendingUp } from "lucide-react"
+import { Trophy, Flame, Zap, Crown, TrendingUp, Award, Rocket, Code2, PenLine, CheckCircle2 } from "lucide-react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { cn } from "@/lib/utils"
-import { BADGES } from "@/lib/constants"
-import { fetchGamificationData } from "@/actions"
+import { StatCard } from "@/components/gamification/stat-card"
+import { AnimatedNumber } from "@/components/gamification/animated-number"
+import { XpBreakdownCard } from "@/components/gamification/xp-breakdown-card"
+import { DailyMissionsCard } from "@/components/gamification/daily-missions-card"
+import { XpHistoryCard } from "@/components/gamification/xp-history-card"
+import { ActivityTimelineCard } from "@/components/gamification/activity-timeline-card"
+import { NextRewardsCard } from "@/components/gamification/next-rewards-card"
+import { BadgeCard } from "@/components/gamification/badge-card"
+import { BadgeModal } from "@/components/gamification/badge-modal"
+import { WeeklyStatsCard } from "@/components/gamification/weekly-stats-card"
+import { StreakCalendarCard } from "@/components/gamification/streak-calendar-card"
+import { LevelUpOverlay } from "@/components/gamification/level-up-overlay"
+import { GamificationSkeleton } from "@/components/gamification/gamification-skeleton"
+import { updateGamification, fetchGamificationData } from "@/actions"
+import type { GamificationSnapshot, BadgeProgress } from "@/lib/gamification"
 
 export default function GamificationPage() {
-  const [data, setData] = useState<{ xp: number; level: number; currentStreak: number; longestStreak: number; dailyScore: number; badges: string[] }>({
-    xp: 0, level: 0, currentStreak: 0, longestStreak: 0, dailyScore: 0, badges: [],
-  })
+  const [data, setData] = useState<GamificationSnapshot | null>(null)
+  const [selectedBadge, setSelectedBadge] = useState<BadgeProgress | null>(null)
+  const [levelUp, setLevelUp] = useState(false)
 
   useEffect(() => {
-    fetchGamificationData().then((d) => { if (d) setData(d) })
+    let active = true
+    ;(async () => {
+      try {
+        const snapshot = await updateGamification()
+        if (active) {
+          setData(snapshot)
+          setLevelUp(!!snapshot.lastUpdatedAt && snapshot.level > (snapshot.storedLevel ?? 0))
+        }
+      } catch {
+        const snapshot = await fetchGamificationData()
+        if (active) setData(snapshot)
+      }
+    })()
+    return () => {
+      active = false
+    }
   }, [])
 
-  const currentLevelXP = data.xp % 100
-  const xpProgress = (currentLevelXP / 100) * 100
+  if (!data) return <GamificationSkeleton />
+
+  const { levelInfo, badges, badgeProgress } = data
+  const isEmpty = data.xp === 0
 
   const statCards = [
-    { icon: Crown, label: "Level", value: `Lv. ${data.level}`, sub: "Level", iconBg: "bg-purple-500/10", iconColor: "text-purple-500", gradient: "from-purple-500/10", delay: 0 },
-    { icon: Zap, label: "Total XP", value: data.xp.toLocaleString(), sub: "Total XP", iconBg: "bg-yellow-400/10", iconColor: "text-yellow-400", delay: 0.1 },
+    { icon: Crown, label: "Level", value: `Lv. ${data.level}`, sub: "Current Level", iconBg: "bg-purple-500/10", iconColor: "text-purple-500", gradient: "from-purple-500/10", delay: 0 },
+    { icon: Zap, label: "Total XP", value: <AnimatedNumber value={data.xp} />, sub: "Total XP", iconBg: "bg-yellow-400/10", iconColor: "text-yellow-400", delay: 0.1 },
     { icon: Flame, label: "Current Streak", value: `${data.currentStreak} days`, sub: "Current Streak", iconBg: "bg-orange-400/10", iconColor: "text-orange-400", delay: 0.2 },
     { icon: TrendingUp, label: "Daily Score", value: `${data.dailyScore}%`, sub: "Daily Score", iconBg: "bg-green-400/10", iconColor: "text-green-400", delay: 0.3 },
   ]
@@ -37,20 +67,7 @@ export default function GamificationPage() {
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
         {statCards.map((item) => (
-          <motion.div key={item.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: item.delay }} className="min-w-0">
-            <Card className={`glass-hover h-full p-4 sm:p-5 ${item.gradient ? "overflow-hidden relative" : ""}`}>
-              {item.gradient && <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} to-transparent`} />}
-              <CardContent className="relative flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl ${item.iconBg} flex items-center justify-center shrink-0`}>
-                  <item.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${item.iconColor}`} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold truncate">{item.value}</p>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{item.sub}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <StatCard key={item.label} {...item} />
         ))}
       </div>
 
@@ -60,52 +77,69 @@ export default function GamificationPage() {
             <Crown className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 text-sm mb-1">
-              <span className="text-muted-foreground text-xs sm:text-sm">XP Progress</span>
-              <span className="font-medium text-xs sm:text-sm">{currentLevelXP}/100 XP</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1">
+              <span className="text-muted-foreground text-xs sm:text-sm">Level {levelInfo.level} · {data.xp.toLocaleString()} / {levelInfo.xpForNextLevel.toLocaleString()} XP</span>
+              <span className="font-medium text-xs sm:text-sm">{levelInfo.xpRemaining} XP to Level {levelInfo.level + 1}</span>
             </div>
-            <Progress value={xpProgress} className="h-2" />
+            <Progress value={levelInfo.progressPct} className="h-2" />
           </div>
         </CardContent>
       </Card>
 
+      {isEmpty ? (
+        <Card className="p-4 sm:p-6">
+          <CardContent className="flex flex-col items-center text-center py-6 sm:py-10">
+            <Rocket className="h-10 w-10 text-primary mb-3" />
+            <h3 className="text-lg font-semibold mb-1">Start earning XP</h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-5">
+              Complete habits, solve LeetCode problems and write journal entries. Every action earns XP, builds streaks and unlocks badges.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Link href="/habits">
+                <Button size="sm" className="gap-1.5"><CheckCircle2 className="h-4 w-4" />Complete Habits</Button>
+              </Link>
+              <Link href="/leetcode">
+                <Button size="sm" variant="outline" className="gap-1.5"><Code2 className="h-4 w-4" />Solve LeetCode</Button>
+              </Link>
+              <Link href="/journal">
+                <Button size="sm" variant="outline" className="gap-1.5"><PenLine className="h-4 w-4" />Write Journal</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+            <XpBreakdownCard breakdown={data.breakdown} todayXp={data.todayXp} />
+            <DailyMissionsCard missions={data.missions} />
+          </div>
+
+          <XpHistoryCard history={data.xpHistory} />
+
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+            <ActivityTimelineCard timeline={data.timeline} />
+            <NextRewardsCard rewards={data.nextRewards} />
+          </div>
+        </>
+      )}
+
       <Card className="p-4 sm:p-6">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Award className="h-4 w-4 text-primary" />Badges & Achievements
+            <Award className="h-4 w-4 text-primary" />Badges &amp; Achievements
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-2.5 sm:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-            {BADGES.map((badge, i) => {
-              const earned = data.badges.includes(badge.id)
-              return (
-                <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
-                  <div className={cn("flex flex-col items-center p-3 sm:p-4 rounded-xl border text-center h-full",
-                    earned ? "border-primary/30 bg-primary/5" : "border-border opacity-50 grayscale"
-                  )}>
-                    <span className="text-3xl sm:text-4xl mb-1.5 sm:mb-2">{badge.icon}</span>
-                    <p className="text-[13px] sm:text-sm font-medium leading-tight">{badge.name}</p>
-                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-snug">{badge.description}</p>
-                    <Badge variant={earned ? "success" : "secondary"} className="mt-2 text-[10px] sm:text-xs">{earned ? "Earned" : "Locked"}</Badge>
-                  </div>
-                </motion.div>
-              )
-            })}
+            {badgeProgress.map((badge, i) => (
+              <BadgeCard key={badge.badgeId} badge={badge} index={i} onClick={() => setSelectedBadge(badge)} />
+            ))}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-        <Card className="p-4 sm:p-6">
-          <CardHeader className="pb-2"><CardTitle className="text-base">Weekly Rank</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="rounded-lg border border-dashed border-border p-6 text-center">
-              <Trophy className="h-8 w-8 mx-auto text-muted-foreground/60 mb-2" />
-              <p className="text-sm text-muted-foreground">No rankings yet. Keep up the streak to climb the leaderboard!</p>
-            </div>
-          </CardContent>
-        </Card>
+        <WeeklyStatsCard stats={data.weeklyStats} />
 
         <Card className="p-4 sm:p-6">
           <CardHeader className="pb-2"><CardTitle className="text-base">Streak Stats</CardTitle></CardHeader>
@@ -121,7 +155,7 @@ export default function GamificationPage() {
                 <p className="text-xs text-muted-foreground">Longest Streak</p>
               </div>
               <div className="text-center p-4 rounded-lg border border-border">
-                <p className="text-2xl font-bold text-primary">{data.badges.length}</p>
+                <p className="text-2xl font-bold text-primary">{badges.length}</p>
                 <p className="text-xs text-muted-foreground">Badges Earned</p>
               </div>
             </div>
@@ -130,11 +164,23 @@ export default function GamificationPage() {
                 <span className="text-muted-foreground text-xs sm:text-sm">Next milestone</span>
                 <span className="text-xs sm:text-sm">{Math.max(0, 30 - data.currentStreak)} days until Monthly Master</span>
               </div>
-              <Progress value={(data.currentStreak / 30) * 100} className="h-2" />
+              <Progress value={Math.min(100, (data.currentStreak / 30) * 100)} className="h-2" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {!isEmpty && <StreakCalendarCard days={data.streakCalendar} />}
+
+      {!isEmpty && (
+        <motion.div className="flex items-center justify-center gap-2 text-xs text-muted-foreground" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Trophy className="h-3.5 w-3.5 text-yellow-400" />
+          Keep your streak alive to climb the weekly leaderboard
+        </motion.div>
+      )}
+
+      <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      <LevelUpOverlay level={data.level} show={levelUp} />
     </div>
   )
 }
