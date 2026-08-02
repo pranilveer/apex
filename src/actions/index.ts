@@ -3,6 +3,7 @@
 import { getUserId, findMany, findOne, insertOne, updateOne, deleteOne, replaceOne, findManyGlobal, countDocumentsGlobal, distinctGlobal } from "@/lib/db-actions"
 import { generateId } from "@/lib/utils"
 import { getTodayDateString, nextRevisionDateFor } from "@/lib/revision"
+import { buildSnapshot, type GamificationInput, type GamificationSnapshot } from "@/lib/gamification"
 
 export async function fetchGoals() {
   const items = await findMany<import("@/types").Goal>("goals")
@@ -639,9 +640,72 @@ export async function deleteNotification(id: string) {
   await deleteOne("notifications", id)
 }
 
+async function buildGamificationSnapshot(userId: string): Promise<GamificationSnapshot> {
+  const db = await (await import("@/lib/mongodb")).getDb()
+
+  const [leetcodeProblems, habits, dailyTasks, githubActivities, journalEntries, projects, goals, interviewTopics, gamificationDoc] = await Promise.all([
+    db.collection("leetcode_problems").find({ userId }).toArray(),
+    db.collection("habits").find({ userId }).toArray(),
+    db.collection("daily_tasks").find({ userId }).toArray(),
+    db.collection("github_activities").find({ userId }).toArray(),
+    db.collection("journal_entries").find({ userId }).toArray(),
+    db.collection("projects").find({ userId }).toArray(),
+    db.collection("goals").find({ userId }).toArray(),
+    db.collection("interview_topics").find({ userId }).toArray(),
+    db.collection("gamification").findOne({ userId }),
+  ])
+
+  const stripId = <T>(doc: unknown): T => {
+    const { _id, ...rest } = doc as Record<string, unknown>
+    return { ...rest, id: String(_id) } as T
+  }
+
+  const input: GamificationInput = {
+    leetcodeProblems: leetcodeProblems.map((d) => stripId<import("@/types").LeetCodeProblem>(d)),
+    habits: habits.map((d) => stripId<import("@/types").HabitEntry>(d)),
+    dailyTasks: dailyTasks.map((d) => stripId<import("@/types").DailyTask>(d)),
+    githubActivities: githubActivities.map((d) => stripId<import("@/types").GitHubActivity>(d)),
+    journalEntries: journalEntries.map((d) => stripId<import("@/types").JournalEntry>(d)),
+    projects: projects.map((d) => stripId<import("@/types").Project & { createdAt?: string; updatedAt?: string }>(d)),
+    goals: goals.map((d) => stripId<import("@/types").Goal & { createdAt?: string; updatedAt?: string }>(d)),
+    interviewTopics: interviewTopics.map((d) => stripId<import("@/types").InterviewTopic>(d)),
+    badgeAwards: (gamificationDoc?.badgeAwards as Record<string, string> | undefined) ?? {},
+  }
+
+  const snapshot = buildSnapshot(input)
+  return {
+    ...snapshot,
+    storedLevel: Number(gamificationDoc?.level ?? 0),
+    lastUpdatedAt: gamificationDoc?.updatedAt as string | undefined,
+  }
+}
+
 export async function fetchGamificationData() {
-  const data = await findOne<import("@/types").GamificationData>("gamification")
-  return data
+  const userId = await getUserId()
+  return buildGamificationSnapshot(userId)
+}
+
+export async function updateGamification(): Promise<GamificationSnapshot> {
+  const userId = await getUserId()
+  const snapshot = await buildGamificationSnapshot(userId)
+  const db = await (await import("@/lib/mongodb")).getDb()
+  await db.collection("gamification").updateOne(
+    { userId },
+    {
+      $set: {
+        xp: snapshot.xp,
+        level: snapshot.level,
+        currentStreak: snapshot.currentStreak,
+        longestStreak: snapshot.longestStreak,
+        dailyScore: snapshot.dailyScore,
+        badges: snapshot.badges,
+        badgeAwards: snapshot.badgeAwards,
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    { upsert: true }
+  )
+  return snapshot
 }
 
 export async function fetchDailyTasks() {
