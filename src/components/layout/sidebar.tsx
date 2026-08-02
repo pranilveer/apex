@@ -1,4 +1,5 @@
 "use client"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -50,13 +51,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <Link key={item.href} href={item.href} onClick={onNavigate}>
         <div
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 cursor-pointer",
+            "flex items-center gap-3 rounded-lg px-3 py-3 md:py-2 text-[15px] md:text-sm font-medium transition-all duration-200 cursor-pointer",
             isActive
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
           )}
         >
-          {Icon && <Icon className="h-4 w-4 shrink-0" />}
+          {Icon && <Icon className="h-5 w-5 md:h-4 md:w-4 shrink-0" />}
           <span>{item.title}</span>
           {isActive && (
             <motion.div
@@ -83,7 +84,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       <Separator />
 
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
+      <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 pb-10 md:pb-3">
         <div className="space-y-1">{navItems.map(renderItem)}</div>
 
         {/* Bottom items stay pinned on desktop, but flow inline on mobile so they're always reachable */}
@@ -101,6 +102,18 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useAppStore()
+  const [mobileHeight, setMobileHeight] = useState(0)
+
+  useEffect(() => {
+    const update = () => setMobileHeight(window.innerHeight)
+    update()
+    window.addEventListener("resize", update)
+    window.addEventListener("orientationchange", update)
+    return () => {
+      window.removeEventListener("resize", update)
+      window.removeEventListener("orientationchange", update)
+    }
+  }, [])
 
   return (
     <>
@@ -142,7 +155,8 @@ export function Sidebar() {
             animate={{ x: 0 }}
             exit={{ x: -256 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="fixed left-0 top-0 z-50 h-dvh w-[256px] border-r border-border bg-sidebar md:hidden"
+            style={{ height: mobileHeight || undefined }}
+            className="fixed left-0 top-0 z-50 h-screen w-[256px] border-r border-border bg-sidebar md:hidden"
           >
             <div className="absolute right-2 top-3">
               <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="h-8 w-8">
@@ -157,7 +171,7 @@ export function Sidebar() {
       {/* Desktop: always-mounted sidebar with width transition */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 hidden md:block h-dvh border-r border-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-in-out",
+          "fixed left-0 top-0 z-40 hidden md:block h-screen supports-[height:100dvh]:h-dvh border-r border-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-in-out",
           sidebarOpen ? "w-[256px]" : "w-0"
         )}
       >
