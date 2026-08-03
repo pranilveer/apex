@@ -1,10 +1,10 @@
 "use client"
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import dynamic from "next/dynamic"
 import {
   Plus, Flame, CheckCircle2, Brain, ExternalLink, Trash2, Search, Dices,
-  Clock, Loader2, TrendingUp, Star, RotateCcw,
+  Clock, Loader2, TrendingUp, Star, RotateCcw, RefreshCw,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -83,9 +83,35 @@ export default function LeetcodePage() {
   const [challengeLoading, setChallengeLoading] = useState(false)
   const [drawer, setDrawer] = useState<{ problem: LeetCodeProblem | null; question: LeetCodeQuestion | null } | null>(null)
 
-  const loadProblems = async () => {
+  const loadProblems = useCallback(async () => {
     setProblems(await fetchLeetCodeProblems())
-  }
+  }, [])
+
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState("")
+  const syncingRef = useRef(false)
+
+  const runSync = useCallback(async (force = false) => {
+    if (syncingRef.current) return
+    syncingRef.current = true
+    setSyncing(true)
+    setSyncMsg("")
+    const tz = typeof window !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
+    try {
+      const res = await syncLeetCodeSolutions(tz, force)
+      if (res.skipped) {
+        setSyncMsg("Already synced recently")
+      } else {
+        await loadProblems()
+        setSyncMsg(res.message)
+      }
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : "Sync failed")
+    } finally {
+      syncingRef.current = false
+      setSyncing(false)
+    }
+  }, [loadProblems])
 
   useEffect(() => {
     fetchLeetCodeProblems().then(setProblems)
@@ -101,20 +127,19 @@ export default function LeetcodePage() {
 
   useEffect(() => {
     let cancelled = false
-    const tz = typeof window !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
     getLeetCodeAccount()
       .then((acc) => {
         if (!acc || cancelled) return
         const last = acc.lastSyncAt ? new Date(acc.lastSyncAt).getTime() : 0
         if (Date.now() - last >= 10 * 60 * 1000) {
-          syncLeetCodeSolutions(tz).catch(() => {})
+          runSync()
         }
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [runSync])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -410,6 +435,10 @@ export default function LeetcodePage() {
           <h2 className="text-xl md:text-2xl font-bold">LeetCode Tracker</h2>
           <p className="text-muted-foreground text-sm">Track your problem solving journey</p>
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={() => runSync(true)} disabled={syncing} className="gap-1.5">
+            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />Sync
+          </Button>
         <Dialog open={open} onOpenChange={setOpen}>
           {/* Add Problem button — commented out for now (mobile) */}
           {/* <DialogTrigger asChild>
@@ -443,7 +472,18 @@ export default function LeetcodePage() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {syncMsg && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm">
+          <span className="flex items-center gap-2">
+            <RefreshCw className={`h-3.5 w-3.5 text-primary ${syncing ? "animate-spin" : ""}`} />
+            {syncMsg}
+          </span>
+          <button className="text-muted-foreground hover:text-foreground" onClick={() => setSyncMsg("")}>&times;</button>
+        </div>
+      )}
 
       <LeetCodeAccountCard />
 

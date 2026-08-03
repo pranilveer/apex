@@ -50,7 +50,7 @@ export async function disconnectLeetCodeAccount(): Promise<{ ok: boolean }> {
   return { ok: true }
 }
 
-export async function syncLeetCodeSolutions(timeZone?: string): Promise<SyncResult> {
+export async function syncLeetCodeSolutions(timeZone?: string, force = false): Promise<SyncResult> {
   const userId = await getUserId()
   const db = await getDb()
   const account = await db.collection("leetcode_accounts").findOne({ userId })
@@ -58,7 +58,7 @@ export async function syncLeetCodeSolutions(timeZone?: string): Promise<SyncResu
 
   const now = Date.now()
   const lastSyncAt = account.lastSyncAt ? new Date(account.lastSyncAt as string).getTime() : 0
-  if (now - lastSyncAt < SYNC_INTERVAL_MS) {
+  if (!force && now - lastSyncAt < SYNC_INTERVAL_MS) {
     return { added: 0, total: 0, skipped: true, message: "Already synced recently" }
   }
 
