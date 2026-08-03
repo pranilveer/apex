@@ -2,27 +2,19 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import {
-  Github, GitCommit, GitFork, GitPullRequest, Star, Flame, TrendingUp,
-  Tag, MessageCircle, Plus, ExternalLink, Loader2, ChevronLeft, ChevronRight, type LucideIcon,
+  Github, GitCommit, GitFork, GitPullRequest, Flame,
+  Tag, MessageCircle, Plus, ExternalLink, ChevronLeft, ChevronRight, type LucideIcon,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { fetchGitHubActivities } from "@/actions"
-import {
-  getGitHubAccount,
-  syncGitHubActivities,
-  fetchContributionCalendar,
-} from "@/actions/github-sync"
+import { getGitHubAccount, syncGitHubActivities, fetchGitHubDashboard } from "@/actions/github-sync"
 import { GithubAccountCard } from "@/components/github/github-account"
-import type { GitHubAccount, GitHubActivity } from "@/types"
-
-interface CalendarData {
-  days: { date: string; count: number }[]
-  currentStreak: number
-  longestStreak: number
-  totalContributions: number
-}
+import { GitHubStats, type GitHubCalendarData } from "@/components/github/github-stats"
+import { GitHubCharts } from "@/components/github/github-charts"
+import { GitHubRepos } from "@/components/github/github-repos"
+import { GitHubSkeleton } from "@/components/github/github-skeleton"
+import type { GitHubAccount, GitHubActivity, GitHubRepoInfo } from "@/types"
 
 const ACTIVITY_ICONS: Record<string, { Icon: LucideIcon; className: string }> = {
   push: { Icon: GitCommit, className: "text-green-400 bg-green-400/10" },
@@ -50,19 +42,17 @@ const getHeatColor = (count: number) => {
 export default function GitHubPage() {
   const [activities, setActivities] = useState<GitHubActivity[]>([])
   const [account, setAccount] = useState<GitHubAccount | null>(null)
-  const [calendar, setCalendar] = useState<CalendarData | null>(null)
+  const [calendar, setCalendar] = useState<GitHubCalendarData | null>(null)
+  const [repositories, setRepositories] = useState<GitHubRepoInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
 
   const refreshAll = useCallback(async () => {
-    const [acc, cal, acts] = await Promise.all([
-      getGitHubAccount().catch(() => null),
-      fetchContributionCalendar().catch(() => null),
-      fetchGitHubActivities().catch(() => []),
-    ])
-    setAccount(acc)
-    setCalendar(cal)
-    setActivities(acts)
+    const data = await fetchGitHubDashboard().catch(() => null)
+    setAccount(data?.account ?? null)
+    setCalendar(data?.calendar ?? null)
+    setRepositories(data?.repositories ?? [])
+    setActivities(data?.activities ?? [])
     setPage(1)
     setLoading(false)
   }, [])
@@ -88,15 +78,6 @@ export default function GitHubPage() {
       cancelled = true
     }
   }, [refreshAll])
-
-  const totalActivities = activities.length
-  const thisWeek = activities.filter((a) => {
-    const d = new Date(a.date)
-    const now = new Date()
-    return (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24) <= 7
-  }).length
-  const uniqueRepos = new Set(activities.map((a) => a.repository)).size
-  const totalStars = account?.stars ?? 0
 
   const totalPages = Math.max(1, Math.ceil(activities.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -129,65 +110,14 @@ export default function GitHubPage() {
       <GithubAccountCard onSynced={refreshAll} />
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-        </div>
+        <GitHubSkeleton />
       ) : account ? (
         <>
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
-            <Card className="glass-hover p-4 sm:p-6">
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
-                    <GitCommit className="h-5 w-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{totalActivities}</p>
-                    <p className="text-xs text-muted-foreground">Total Activities</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="glass-hover p-4 sm:p-6">
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-green-400/10 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{thisWeek}</p>
-                    <p className="text-xs text-muted-foreground">This Week</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="glass-hover p-4 sm:p-6">
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-400/10 flex items-center justify-center">
-                    <Github className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{uniqueRepos}</p>
-                    <p className="text-xs text-muted-foreground">Repositories</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="glass-hover p-4 sm:p-6">
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-yellow-400/10 flex items-center justify-center">
-                    <Star className="h-5 w-5 text-yellow-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{totalStars}</p>
-                    <p className="text-xs text-muted-foreground">Stars</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <GitHubStats calendar={calendar} />
+
+          <GitHubCharts calendar={calendar} activities={activities} repositories={repositories} />
+
+          <GitHubRepos repositories={repositories} />
 
           <Card className="p-4 sm:p-6">
             <CardHeader className="mb-2">

@@ -135,6 +135,9 @@ export function GithubAccountCard({ onSynced }: { onSynced?: () => void }) {
                   <p className="text-xs text-muted-foreground">
                     @{account.username} · Last synced {timeAgo(account.lastSyncAt)}
                   </p>
+                  {account.bio ? (
+                    <p className="text-sm text-muted-foreground mt-2 max-w-md">{account.bio}</p>
+                  ) : null}
                 </div>
                 {account.avatarUrl ? (
                   <img
@@ -150,11 +153,12 @@ export function GithubAccountCard({ onSynced }: { onSynced?: () => void }) {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <Stat label="Followers" value={account.followers ?? 0} />
                 <Stat label="Following" value={account.following ?? 0} />
                 <Stat label="Repositories" value={account.repositories ?? 0} />
                 <Stat label="Stars" value={account.stars ?? 0} />
+                <Stat label="Forks" value={account.forks ?? 0} />
                 <Stat label="Streak" value={account.currentStreak ?? 0} />
               </div>
 

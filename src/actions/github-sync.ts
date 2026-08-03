@@ -1,14 +1,14 @@
 "use server"
 
 import { getDb } from "@/lib/mongodb"
-import { getUserId } from "@/lib/db-actions"
+import { getUserId, findMany } from "@/lib/db-actions"
 import {
   fetchGitHubEvents,
   fetchGitHubRepos,
   fetchGitHubUser,
   fetchContributionCalendar as fetchCalendarFromGitHub,
 } from "@/lib/github"
-import type { GitHubAccount } from "@/types"
+import type { GitHubAccount, GitHubActivity } from "@/types"
 import type { GitHubRepository } from "@/lib/github"
 
 const SYNC_INTERVAL_MS = 10 * 60 * 1000
@@ -103,6 +103,7 @@ export async function syncGitHubActivities(): Promise<SyncResult> {
       fetchCalendarFromGitHub(username),
     ])
     const stars = repos.reduce((s, r) => s + r.stars, 0)
+    const forks = repos.reduce((s, r) => s + r.forks, 0)
     const top: GitHubRepository[] = [...repos].sort((a, b) => b.stars - a.stars).slice(0, 5)
 
     await db.collection("github_accounts").updateOne(
@@ -114,11 +115,14 @@ export async function syncGitHubActivities(): Promise<SyncResult> {
           avatarUrl: profile.avatarUrl,
           profileUrl: profile.url,
           displayName: profile.name,
+          bio: profile.bio ?? "",
           followers: profile.followers,
           following: profile.following,
           repositories: profile.publicRepos,
           stars,
+          forks,
           topRepositories: top,
+          repoList: repos,
           currentStreak: calendar.currentStreak,
           longestStreak: calendar.longestStreak,
           totalContributions: calendar.totalContributions,
@@ -154,6 +158,7 @@ export async function fetchGitHubProfile() {
   return {
     username: account.username,
     displayName: account.displayName ?? "",
+    bio: account.bio ?? "",
     avatarUrl: account.avatarUrl ?? "",
     profileUrl: account.profileUrl ?? "",
     followers: account.followers ?? 0,
@@ -167,7 +172,9 @@ export async function fetchGitHubRepositories() {
   return {
     repositories: account.repositories ?? 0,
     stars: account.stars ?? 0,
+    forks: account.forks ?? 0,
     top: account.topRepositories ?? [],
+    list: account.repoList ?? [],
   }
 }
 
@@ -179,5 +186,22 @@ export async function fetchContributionCalendar() {
     currentStreak: account.currentStreak ?? 0,
     longestStreak: account.longestStreak ?? 0,
     totalContributions: account.totalContributions ?? 0,
+  }
+}
+
+export async function fetchGitHubDashboard() {
+  const account = await getGitHubAccount()
+  if (!account) return null
+  const activities = await findMany<GitHubActivity>("github_activities")
+  return {
+    account,
+    calendar: {
+      days: account.contributionCalendar ?? [],
+      currentStreak: account.currentStreak ?? 0,
+      longestStreak: account.longestStreak ?? 0,
+      totalContributions: account.totalContributions ?? 0,
+    },
+    repositories: account.repoList ?? [],
+    activities,
   }
 }

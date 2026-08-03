@@ -117,6 +117,18 @@ export interface GitHubActivity {
   createdAt: string
 }
 
+export interface GitHubRepoInfo {
+  name: string
+  stars: number
+  forks: number
+  language: string
+  archived: boolean
+  createdAt: string
+  pushedAt: string
+  url: string
+  description: string
+}
+
 export interface GitHubAccount {
   id: string
   username: string
@@ -126,15 +138,18 @@ export interface GitHubAccount {
   avatarUrl?: string
   profileUrl?: string
   displayName?: string
+  bio?: string
   followers?: number
   following?: number
   repositories?: number
   stars?: number
+  forks?: number
   currentStreak?: number
   longestStreak?: number
   totalContributions?: number
   contributionCalendar?: { date: string; count: number }[]
-  topRepositories?: { name: string; stars: number; url: string }[]
+  topRepositories?: GitHubRepoInfo[]
+  repoList?: GitHubRepoInfo[]
   syncedEventIds?: string[]
 }
 

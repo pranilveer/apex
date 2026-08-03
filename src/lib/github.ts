@@ -4,6 +4,7 @@ const GITHUB_USER_AGENT = "apex-tracker/1.0"
 export interface GitHubUserProfile {
   username: string
   name?: string
+  bio?: string
   avatarUrl: string
   url: string
   followers: number
@@ -14,7 +15,13 @@ export interface GitHubUserProfile {
 export interface GitHubRepository {
   name: string
   stars: number
+  forks: number
+  language: string
+  archived: boolean
+  createdAt: string
+  pushedAt: string
   url: string
+  description: string
 }
 
 export interface GitHubSyncEvent {
@@ -62,6 +69,7 @@ export async function fetchGitHubUser(username: string): Promise<GitHubUserProfi
   const data = (await apiGet(`/users/${encodeURIComponent(username)}`)) as {
     login?: string
     name?: string
+    bio?: string
     avatar_url?: string
     html_url?: string
     followers?: number
@@ -71,6 +79,7 @@ export async function fetchGitHubUser(username: string): Promise<GitHubUserProfi
   return {
     username: data.login ?? username,
     name: data.name ?? "",
+    bio: data.bio ?? "",
     avatarUrl: data.avatar_url ?? "",
     url: data.html_url ?? `https://github.com/${username}`,
     followers: data.followers ?? 0,
@@ -79,20 +88,36 @@ export async function fetchGitHubUser(username: string): Promise<GitHubUserProfi
   }
 }
 
-export async function fetchGitHubRepos(username: string, maxPages = 3): Promise<GitHubRepository[]> {
+export async function fetchGitHubRepos(username: string, maxPages = 1): Promise<GitHubRepository[]> {
   const repos: GitHubRepository[] = []
   let page = 1
   let keepGoing = true
   while (keepGoing && page <= maxPages) {
     const data = (await apiGet(
       `/users/${encodeURIComponent(username)}/repos?per_page=100&sort=updated&page=${page}`
-    )) as { name?: string; stargazers_count?: number; html_url?: string }[]
+    )) as {
+      name?: string
+      description?: string
+      stargazers_count?: number
+      forks_count?: number
+      language?: string | null
+      archived?: boolean
+      created_at?: string
+      pushed_at?: string
+      html_url?: string
+    }[]
     if (!Array.isArray(data)) break
     for (const r of data) {
       repos.push({
         name: r.name ?? "",
         stars: r.stargazers_count ?? 0,
+        forks: r.forks_count ?? 0,
+        language: r.language ?? "",
+        archived: r.archived ?? false,
+        createdAt: r.created_at ?? "",
+        pushedAt: r.pushed_at ?? "",
         url: r.html_url ?? `https://github.com/${username}/${r.name}`,
+        description: r.description ?? "",
       })
     }
     if (data.length < 100) keepGoing = false
