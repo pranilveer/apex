@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -54,8 +55,19 @@ export default function SignUpPage() {
     if (result.error) {
       setError(result.error)
     } else {
-      setSuccess(true)
-      setTimeout(() => router.push("/auth/signin"), 2000)
+      const signInResult = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
+
+      if (signInResult?.error) {
+        setSuccess(true)
+        setTimeout(() => router.push("/auth/signin"), 2000)
+      } else {
+        router.push("/")
+        router.refresh()
+      }
     }
   }
 
@@ -74,7 +86,7 @@ export default function SignUpPage() {
               </div>
               <CardTitle className="text-2xl mb-2">Account Created!</CardTitle>
               <CardDescription className="text-base">
-                Redirecting you to sign in...
+                Signing you in...
               </CardDescription>
             </CardContent>
           </Card>
