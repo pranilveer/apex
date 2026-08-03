@@ -1,9 +1,12 @@
 "use server"
 
 import { getUserId, findMany, findOne, insertOne, updateOne, deleteOne, replaceOne, findManyGlobal, countDocumentsGlobal, distinctGlobal } from "@/lib/db-actions"
-import { generateId } from "@/lib/utils"
-import { getTodayDateString, nextRevisionDateFor } from "@/lib/revision"
+import { generateId, calculateStreak } from "@/lib/utils"
+import { getTodayDateString, nextRevisionDateFor, solvedDatesOf } from "@/lib/revision"
 import { buildSnapshot, type GamificationInput, type GamificationSnapshot } from "@/lib/gamification"
+import { mostActiveRepo, repoGrowth, topLanguages, totalCommits, estimateCodingMinutes, weeklyContributions, contributionTrend } from "@/lib/github-insights"
+import { fetchGitHubDashboard } from "@/actions/github-sync"
+import type { GitHubAccount, GitHubActivity } from "@/types"
 
 export async function fetchGoals() {
   const items = await findMany<import("@/types").Goal>("goals")
@@ -658,7 +661,7 @@ export async function syncNotifications(timeZone?: string): Promise<number> {
 async function buildGamificationSnapshot(userId: string): Promise<GamificationSnapshot> {
   const db = await (await import("@/lib/mongodb")).getDb()
 
-  const [leetcodeProblems, habits, dailyTasks, githubActivities, journalEntries, projects, goals, interviewTopics, gamificationDoc] = await Promise.all([
+  const [leetcodeProblems, habits, dailyTasks, githubActivities, journalEntries, projects, goals, interviewTopics, gamificationDoc, githubAccount] = await Promise.all([
     db.collection("leetcode_problems").find({ userId }).toArray(),
     db.collection("habits").find({ userId }).toArray(),
     db.collection("daily_tasks").find({ userId }).toArray(),
@@ -668,6 +671,7 @@ async function buildGamificationSnapshot(userId: string): Promise<GamificationSn
     db.collection("goals").find({ userId }).toArray(),
     db.collection("interview_topics").find({ userId }).toArray(),
     db.collection("gamification").findOne({ userId }),
+    db.collection("github_accounts").findOne({ userId }),
   ])
 
   const stripId = <T>(doc: unknown): T => {
@@ -684,6 +688,7 @@ async function buildGamificationSnapshot(userId: string): Promise<GamificationSn
     projects: projects.map((d) => stripId<import("@/types").Project & { createdAt?: string; updatedAt?: string }>(d)),
     goals: goals.map((d) => stripId<import("@/types").Goal & { createdAt?: string; updatedAt?: string }>(d)),
     interviewTopics: interviewTopics.map((d) => stripId<import("@/types").InterviewTopic>(d)),
+    githubAccount: githubAccount ? stripId<import("@/types").GitHubAccount>(githubAccount) : undefined,
     badgeAwards: (gamificationDoc?.badgeAwards as Record<string, string> | undefined) ?? {},
   }
 
@@ -761,12 +766,27 @@ export interface AnalyticsData {
   heatmapData: { date: string; count: number }[]
   productivityData: { week: string; productivity: number }[]
   pieData: { name: string; value: number; color: string }[]
+  githubData: AnalyticsGithubData
+}
+
+export interface AnalyticsGithubData {
+  commits: number
+  repos: number
+  stars: number
+  forks: number
+  codingHours: number
+  weeklyContributions: { day: string; count: number }[]
+  contributionTrend: { date: string; count: number }[]
+  languageData: { name: string; value: number }[]
+  repoGrowth: { month: string; created: number }[]
 }
 
 export async function fetchAnalytics(): Promise<AnalyticsData> {
   const userId = await getUserId()
   const db = await (await import("@/lib/mongodb")).getDb()
   const tasks = (await db.collection("daily_tasks").find({ userId }).toArray()).map(({ _id, ...rest }) => rest)
+  const githubAccount = (await db.collection("github_accounts").findOne({ userId })) as unknown as GitHubAccount | null
+  const githubActivities = (await db.collection("github_activities").find({ userId }).toArray()) as unknown as GitHubActivity[]
 
   const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   const now = new Date()
@@ -853,7 +873,95 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
     return { week: weekKey, productivity: Math.round((completed / total) * 100) }
   })
 
-  return { weeklyData, monthlyData, radarData, heatmapData, productivityData, pieData }
+  const calendar = githubAccount?.contributionCalendar
+    ? { days: githubAccount.contributionCalendar, currentStreak: githubAccount.currentStreak ?? 0, longestStreak: githubAccount.longestStreak ?? 0, totalContributions: githubAccount.totalContributions ?? 0 }
+    : null
+  const commits = totalCommits(githubAccount, githubActivities)
+  const trackedCodingMinutes = typedTasks
+    .filter((t) => t.completed && ["leetcode", "github", "project", "javascript", "react", "nodejs", "system-design"].includes(t.id))
+    .reduce((s, t) => s + t.timeSpent, 0)
+  const weeklyContributionTotal = weeklyContributions(calendar).reduce((s, w) => s + w.count, 0)
+  const codingHours = Math.round((estimateCodingMinutes(weeklyContributionTotal, trackedCodingMinutes) / 60) * 10) / 10
+  const githubData: AnalyticsGithubData = {
+    commits,
+    repos: githubAccount?.repositories ?? 0,
+    stars: githubAccount?.stars ?? 0,
+    forks: githubAccount?.forks ?? 0,
+    codingHours,
+    weeklyContributions: weeklyContributions(calendar),
+    contributionTrend: contributionTrend(calendar, 30),
+    languageData: topLanguages(githubAccount?.repoList ?? []),
+    repoGrowth: repoGrowth(githubAccount?.repoList ?? []),
+  }
+
+  return { weeklyData, monthlyData, radarData, heatmapData, productivityData, pieData, githubData }
+}
+
+export interface DashboardData {
+  level: number
+  xp: number
+  currentStreak: number
+  activeGoals: number
+  leetcodeSolved: number
+  leetcodeStreak: number
+  habitStreak: number
+  github: {
+    account: GitHubAccount | null
+    calendar: { days: { date: string; count: number }[]; currentStreak: number; longestStreak: number; totalContributions: number } | null
+    todayCommits: number
+    mostActiveRepo: string | null
+    languages: { name: string; value: number }[]
+    recentActivities: GitHubActivity[]
+    repoGrowth: { month: string; created: number }[]
+  }
+}
+
+export async function fetchDashboardData(): Promise<DashboardData> {
+  const userId = await getUserId()
+  const db = await (await import("@/lib/mongodb")).getDb()
+  const [snapshot, goals, leetcodeProblems, habits, gh] = await Promise.all([
+    buildGamificationSnapshot(userId),
+    db.collection("goals").find({ userId }).toArray(),
+    db.collection("leetcode_problems").find({ userId }).toArray(),
+    db.collection("habits").find({ userId }).toArray(),
+    fetchGitHubDashboard(),
+  ])
+
+  const activeGoals = goals.filter((g) => {
+    const target = Number(g.targetValue ?? 0)
+    const current = Number(g.currentValue ?? 0)
+    return target > 0 ? current < target : true
+  }).length
+
+  const solvedDates = [...new Set(leetcodeProblems.flatMap((p) => solvedDatesOf(p as unknown as import("@/types").LeetCodeProblem)))].sort()
+  const leetcodeStreak = calculateStreak(solvedDates).current
+
+  const habitDays = habits
+    .filter((h) => Object.values((h.habits as Record<string, boolean> | undefined) ?? {}).some(Boolean))
+    .map((h) => h.date as string)
+  const habitStreak = calculateStreak([...new Set(habitDays)].sort()).current
+
+  const activities = gh?.activities ?? []
+  const todayKey = new Date().toISOString().slice(0, 10)
+
+  return {
+    level: snapshot.level,
+    xp: snapshot.xp,
+    currentStreak: snapshot.currentStreak,
+    activeGoals,
+    leetcodeSolved: leetcodeProblems.length,
+    leetcodeStreak,
+    habitStreak,
+    github: {
+      account: gh?.account ?? null,
+      calendar: gh?.calendar ?? null,
+      todayCommits: activities.filter((a) => a.date === todayKey && a.type === "push").length,
+      mostActiveRepo: mostActiveRepo(activities, 30),
+      languages: topLanguages(gh?.repositories ?? []),
+      recentActivities: activities.slice(0, 8),
+      repoGrowth: repoGrowth(gh?.repositories ?? []),
+    },
+  }
 }
 
 export async function registerUser(data: { name: string; email: string; password: string }) {

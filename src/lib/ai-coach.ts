@@ -1,4 +1,6 @@
 import { getDb } from "@/lib/mongodb"
+import type { GitHubActivity, GitHubRepoInfo } from "@/types"
+import { inactiveRepos, mostActiveRepo, topLanguages } from "@/lib/github-insights"
 
 export interface CoachMessage {
   id: string
@@ -51,7 +53,20 @@ interface GoalDoc { title?: string; category?: string; priority?: string; target
 interface HabitDoc { date?: string; habits?: Record<string, boolean> }
 interface LeetCodeDoc { name?: string; difficulty?: string; topic?: string; solvedDate?: string; needsRevision?: boolean }
 interface JournalDoc { date?: string; wins?: string; mistakes?: string; tomorrowPlan?: string; eveningReflection?: string; morningGoals?: string; mood?: string; energy?: number }
-interface GitHubDoc { date?: string; type?: string; repository?: string; title?: string; url?: string }
+interface GitHubDoc { date?: string; type?: string; repository?: string; title?: string; url?: string; commitCount?: number }
+interface GitHubAccountDoc {
+  username?: string
+  currentStreak?: number
+  longestStreak?: number
+  totalContributions?: number
+  totalCommits?: number
+  openPrs?: number
+  stars?: number
+  forks?: number
+  repositories?: number
+  repoList?: GitHubRepoInfo[]
+  contributionCalendar?: { date?: string; count?: number }[]
+}
 interface ProjectDoc { name?: string; status?: string; description?: string; tasks?: { status?: string }[]; updatedAt?: string }
 interface JobDoc { role?: string; company?: string; status?: string; appliedDate?: string; archived?: boolean }
 interface InterviewTopicDoc { label?: string; progress?: number; createdAt?: string }
@@ -62,7 +77,7 @@ export async function buildContext(userId: string): Promise<string> {
   const db = await getDb()
   const q = { userId }
 
-  const [goals, habits, leetcode, journals, github, projects, jobs, interviewTopics, dailyTasks, wishlist] =
+  const [goals, habits, leetcode, journals, github, projects, jobs, interviewTopics, dailyTasks, wishlist, githubAccount] =
     await Promise.all([
       db.collection("goals").find(q).sort({ createdAt: -1 }).limit(10).toArray() as Promise<GoalDoc[]>,
       db.collection("habits").find(q).sort({ date: -1 }).limit(30).toArray() as Promise<HabitDoc[]>,
@@ -74,6 +89,7 @@ export async function buildContext(userId: string): Promise<string> {
       db.collection("interview_topics").find(q).sort({ createdAt: -1 }).limit(20).toArray() as Promise<InterviewTopicDoc[]>,
       db.collection("daily_tasks").find(q).sort({ date: -1 }).limit(14).toArray() as Promise<DailyTaskDoc[]>,
       db.collection("wishlist").find(q).sort({ applicationDeadline: 1 }).limit(10).toArray() as Promise<WishlistDoc[]>,
+      db.collection("github_accounts").findOne(q) as Promise<GitHubAccountDoc | null>,
     ])
 
   const lines: string[] = []
@@ -121,13 +137,37 @@ export async function buildContext(userId: string): Promise<string> {
     }
   }
 
-  if (github.length) {
-    const totalActivities = github.length
+  if (github.length || githubAccount) {
+    const githubActivities = github as unknown as GitHubActivity[]
+    const repoList = (githubAccount?.repoList ?? []) as GitHubRepoInfo[]
+    const total = githubAccount?.totalCommits ?? githubActivities.filter((g) => g.type === "push").reduce((s, g) => s + (g.commitCount ?? 1), 0)
+    const languages = topLanguages(repoList, 5)
+    const activeRepo = mostActiveRepo(githubActivities, 30)
+    const inactive = inactiveRepos(repoList, 7, 3)
+    const recentCommits = githubActivities
+      .filter((g) => g.type === "push")
+      .slice(0, 5)
+      .map((g) => `${g.date}: ${g.title ?? "commit"} in ${g.repository ?? "?"}`)
+
+    const pushDates = new Set(githubActivities.filter((g) => g.type === "push").map((g) => g.date))
+    const solvedDates = new Set(leetcode.filter((p) => p.solvedDate).map((p) => p.solvedDate))
+    const last7 = [...Array(7)].map((_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      return d.toISOString().slice(0, 10)
+    })
+    const leetcodeNoPush = last7.filter((d) => solvedDates.has(d) && !pushDates.has(d))
+
     lines.push(
       "## GitHub",
-      `- Activities tracked: ${totalActivities}`,
-      `- Recent: ${github.slice(0, 8).map((g) => `${g.date}: ${g.title ?? g.type ?? "activity"} in ${g.repository ?? "?"}`).join("; ")}`
+      `- Total commits: ${total}${githubAccount?.currentStreak ? ` | current contribution streak: ${githubAccount.currentStreak}d (longest ${githubAccount.longestStreak ?? 0}d)` : ""}${githubAccount?.openPrs ? ` | open PRs: ${githubAccount.openPrs}` : ""}`,
+      `- Stats: ${githubAccount?.repositories ?? 0} repos, ${githubAccount?.stars ?? 0} stars, ${githubAccount?.forks ?? 0} forks`
     )
+    if (languages.length) lines.push(`- Top languages: ${languages.map((l) => `${l.name} (${l.value})`).join(", ")}`)
+    if (activeRepo) lines.push(`- Most active repo (30d): ${activeRepo}`)
+    if (inactive.length) lines.push(`- Inactive repos (7d+): ${inactive.map((r) => r.name).join(", ")}`)
+    if (recentCommits.length) lines.push(`- Recent commits: ${recentCommits.join("; ")}`)
+    if (leetcodeNoPush.length) lines.push(`- Days with LeetCode solves but no push (last 7d): ${leetcodeNoPush.join(", ")}`)
   }
 
   if (projects.length) {
@@ -184,6 +224,7 @@ You are given a snapshot of the user's real tracked data below. Use it to give s
 - Refer to the user's actual numbers, problems, goals, and entries whenever relevant.
 - Be concise but concrete: short paragraphs, bullet points, and small tables are fine (use markdown).
 - For LeetCode questions, suggest by topic/pattern and difficulty matching their weak areas.
+- For GitHub, connect commit/PR/repo activity with the user's LeetCode solves and daily tasks: point out gaps (e.g., days with LeetCode solves but no push, inactive repositories, a contribution streak about to lapse, an under-utilized top language).
 - For job search, reference specific companies/applications and give next-step actions.
 - Never invent data that is not in the snapshot; if something is missing say so briefly.
 - Keep responses under ~500 words unless the user asks for detail.

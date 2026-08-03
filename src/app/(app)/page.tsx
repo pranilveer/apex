@@ -7,10 +7,11 @@ import {
   TrendingUp, Flame, Target, Zap, ArrowUpRight, Braces
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { useDailyStore } from "@/stores/daily-store"
+import { GitHubWidget } from "@/components/dashboard/github-widget"
+import { fetchDashboardData, type DashboardData } from "@/actions"
 import Link from "next/link"
 
 const taskIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -58,15 +59,23 @@ const item = {
   show: { opacity: 1, y: 0 },
 }
 
+const days = (n: number) => `${n} Day${n === 1 ? "" : "s"}`
+
 export default function DashboardPage() {
   const { tasks, toggleTask, getCompletionPercentage, loadTasks } = useDailyStore()
   const completionPct = getCompletionPercentage()
   const completedCount = tasks.filter((t) => t.completed).length
   const totalTime = tasks.reduce((sum, t) => sum + t.timeSpent, 0)
-  const [dateStr, setDateStr] = useState("")
+  const [dateStr] = useState(() =>
+    new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+  )
+  const [dash, setDash] = useState<DashboardData | null>(null)
+
   useEffect(() => {
-    setDateStr(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }))
     loadTasks()
+    fetchDashboardData()
+      .then(setDash)
+      .catch(() => setDash(null))
   }, [loadTasks])
 
   return (
@@ -92,8 +101,8 @@ export default function DashboardPage() {
         {[
           { label: "Tasks Done", value: `${completedCount}/${tasks.length}`, icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10", delay: 0.1 },
           { label: "Time Spent", value: `${Math.floor(totalTime / 60)}h ${totalTime % 60}m`, icon: Clock, color: "text-blue-400", bg: "bg-blue-400/10", delay: 0.15 },
-          { label: "LeetCode Streak", value: "0 Days", icon: Flame, color: "text-yellow-400", bg: "bg-yellow-400/10", delay: 0.2 },
-          { label: "Level", value: "Lv. 0", icon: Zap, color: "text-purple-400", bg: "bg-purple-400/10", delay: 0.25 },
+          { label: "LeetCode Streak", value: days(dash?.leetcodeStreak ?? 0), icon: Flame, color: "text-yellow-400", bg: "bg-yellow-400/10", delay: 0.2 },
+          { label: "Level", value: `Lv. ${dash?.level ?? 0}`, icon: Zap, color: "text-purple-400", bg: "bg-purple-400/10", delay: 0.25 },
         ].map((stat) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: stat.delay }}>
             <Card className="glass-hover h-full">
@@ -178,7 +187,7 @@ export default function DashboardPage() {
               </div>
                 <div>
                   <p className="text-sm font-medium">Active Goals</p>
-                  <p className="text-xl font-bold">0</p>
+                  <p className="text-xl font-bold">{dash?.activeGoals ?? 0}</p>
                 </div>
               <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
             </CardContent>
@@ -193,7 +202,7 @@ export default function DashboardPage() {
               </div>
                 <div>
                   <p className="text-sm font-medium">Problems Solved</p>
-                  <p className="text-xl font-bold">0</p>
+                  <p className="text-xl font-bold">{dash?.leetcodeSolved ?? 0}</p>
                 </div>
               <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
             </CardContent>
@@ -208,13 +217,15 @@ export default function DashboardPage() {
               </div>
                 <div>
                   <p className="text-sm font-medium">Habit Streak</p>
-                  <p className="text-xl font-bold">0 Days</p>
+                  <p className="text-xl font-bold">{days(dash?.habitStreak ?? 0)}</p>
                 </div>
               <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
             </CardContent>
           </Card>
         </Link>
       </div>
+
+      {dash && <GitHubWidget github={dash.github} />}
     </div>
   )
 }

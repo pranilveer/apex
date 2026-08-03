@@ -1,5 +1,6 @@
 import type {
   DailyTask,
+  GitHubAccount,
   GitHubActivity,
   Goal,
   HabitEntry,
@@ -11,6 +12,13 @@ import type {
 import { addDays, getTodayDateString, solvedDatesOf } from "@/lib/revision"
 import { calculateStreak, getRelativeDayLabel } from "@/lib/utils"
 import { BADGES } from "@/lib/constants"
+import {
+  countCommits,
+  countCreatedRepos,
+  countOpenSourceContributions,
+  countReviews,
+  ownRepoSet,
+} from "@/lib/github-insights"
 
 export const XP_PER_LEVEL = 100
 
@@ -18,12 +26,57 @@ export const ACTIVITY_XP = {
   leetcodeSolved: 25,
   habitCompleted: 15,
   dailyTaskCompleted: 10,
-  githubActivity: 20,
   journalWritten: 10,
   projectTaskDone: 15,
   goalCompleted: 50,
   interviewTopicMastered: 25,
 } as const
+
+export const GITHUB_ACTIVITY_XP = {
+  push: 10,
+  pullRequestOpened: 5,
+  pullRequestMerged: 30,
+  issueOpened: 5,
+  issueClosed: 15,
+  review: 15,
+  release: 15,
+  fork: 10,
+  repositoryCreated: 50,
+  createOther: 10,
+  other: 5,
+} as const
+
+export const MISSION_XP = {
+  githubCommit: 10,
+  githubPr: 25,
+  githubReview: 20,
+  githubTask: 15,
+} as const
+
+export function githubActivityXp(activity: Pick<GitHubActivity, "type" | "action" | "merged" | "refType" | "title">): number {
+  switch (activity.type) {
+    case "push":
+      return GITHUB_ACTIVITY_XP.push
+    case "pull_request":
+      return activity.merged ? GITHUB_ACTIVITY_XP.pullRequestMerged : GITHUB_ACTIVITY_XP.pullRequestOpened
+    case "issue":
+      return activity.action === "closed" || activity.title?.startsWith("Issue closed")
+        ? GITHUB_ACTIVITY_XP.issueClosed
+        : GITHUB_ACTIVITY_XP.issueOpened
+    case "review":
+      return GITHUB_ACTIVITY_XP.review
+    case "release":
+      return GITHUB_ACTIVITY_XP.release
+    case "fork":
+      return GITHUB_ACTIVITY_XP.fork
+    case "create":
+      return activity.refType === "repository" || activity.title?.startsWith("Created repository")
+        ? GITHUB_ACTIVITY_XP.repositoryCreated
+        : GITHUB_ACTIVITY_XP.createOther
+    default:
+      return GITHUB_ACTIVITY_XP.other
+  }
+}
 
 export const BADGE_REWARDS: Record<string, number> = {
   "first-day": 25,
@@ -36,6 +89,15 @@ export const BADGE_REWARDS: Record<string, number> = {
   "interview-ready": 120,
   "bookworm": 80,
   "hydrated": 60,
+  "first-commit": 10,
+  "commits-10": 25,
+  "commits-100": 100,
+  "commits-500": 250,
+  "open-source-contributor": 150,
+  "repository-creator": 100,
+  "stars-100": 150,
+  "pr-master": 150,
+  "code-reviewer": 120,
 }
 
 export type XpSource =
@@ -144,6 +206,7 @@ export interface GamificationInput {
   habits: HabitEntry[]
   dailyTasks: DailyTask[]
   githubActivities: GitHubActivity[]
+  githubAccount?: GitHubAccount
   journalEntries: JournalEntry[]
   projects: (Project & { createdAt?: string; updatedAt?: string })[]
   goals: (Goal & { createdAt?: string; updatedAt?: string })[]
@@ -220,7 +283,7 @@ export function buildActivityEvents(input: GamificationInput): ActivityEvent[] {
   }
 
   for (const g of input.githubActivities) {
-    events.push({ id: `${g.id}-github`, date: g.date, type: "github", label: `${g.title} in ${g.repository}`, xp: ACTIVITY_XP.githubActivity })
+    events.push({ id: `${g.id}-github`, date: g.date, type: "github", label: `${g.title} in ${g.repository}`, xp: githubActivityXp(g) })
   }
 
   for (const j of input.journalEntries) {
@@ -320,6 +383,12 @@ export function calculateBadgeProgress(
   const cutoff = addDays(date, -29)
   const githubContribs = input.githubActivities.filter((g) => g.date >= cutoff).length
 
+  const githubAccount = input.githubAccount
+  const commitTotal = githubAccount?.totalCommits ?? countCommits(input.githubActivities)
+  const ownRepos = ownRepoSet(githubAccount?.repoList ?? [])
+  const prCount = input.githubActivities.filter((a) => a.type === "pull_request").length
+  const hasGithubActivity = input.githubActivities.length > 0
+
   const totalTopics = input.interviewTopics.length
   const masteredTopics = input.interviewTopics.filter((t) => (t.progress ?? 0) >= 100).length
 
@@ -334,6 +403,15 @@ export function calculateBadgeProgress(
     "interview-ready": { current: masteredTopics, target: totalTopics, unit: "topic", computable: totalTopics > 0 },
     "bookworm": { current: 0, target: 0, unit: "book", computable: false },
     "hydrated": { current: waterDays.size, target: 30, unit: "day", computable: true },
+    "first-commit": { current: commitTotal, target: 1, unit: "commit", computable: true },
+    "commits-10": { current: commitTotal, target: 10, unit: "commit", computable: true },
+    "commits-100": { current: commitTotal, target: 100, unit: "commit", computable: true },
+    "commits-500": { current: commitTotal, target: 500, unit: "commit", computable: true },
+    "open-source-contributor": { current: countOpenSourceContributions(input.githubActivities, ownRepos), target: 25, unit: "contribution", computable: hasGithubActivity },
+    "repository-creator": { current: countCreatedRepos(input.githubActivities), target: 1, unit: "repository", computable: hasGithubActivity },
+    "stars-100": { current: githubAccount?.stars ?? 0, target: 100, unit: "star", computable: githubAccount != null },
+    "pr-master": { current: prCount, target: 25, unit: "pull request", computable: hasGithubActivity },
+    "code-reviewer": { current: countReviews(input.githubActivities), target: 10, unit: "review", computable: hasGithubActivity },
   }
 
   return BADGES.map((b) => {
@@ -476,7 +554,6 @@ export function generateDailyMissions(input: GamificationInput, today?: string):
   const doneTaskIds = new Set(tasksToday.filter((t) => t.completed).map((t) => t.id))
 
   const leetcodeToday = input.leetcodeProblems.flatMap((p) => solvedDatesOf(p)).filter((d) => d === date).length
-  const githubToday = input.githubActivities.filter((g) => g.date === date).length
   const journalToday = input.journalEntries.filter((j) => j.date === date).length
   const gymDone = habitsToday["gym"] || doneTaskIds.has("gym") ? 1 : 0
   const waterDone = habitsToday["water"] || doneTaskIds.has("water") ? 1 : 0
@@ -484,10 +561,25 @@ export function generateDailyMissions(input: GamificationInput, today?: string):
   const missions: DailyMission[] = [
     { id: "leetcode", label: "Solve 2 LeetCode problems", icon: "Code2", current: leetcodeToday, target: 2, xp: 50, done: leetcodeToday >= 2 },
     { id: "gym", label: "Complete Gym", icon: "Dumbbell", current: gymDone, target: 1, xp: 15, done: gymDone >= 1 },
-    { id: "github", label: "Make a GitHub commit", icon: "Github", current: githubToday, target: 1, xp: 20, done: githubToday >= 1 },
     { id: "journal", label: "Write a journal entry", icon: "PenLine", current: journalToday, target: 1, xp: 10, done: journalToday >= 1 },
     { id: "water", label: "Stay hydrated", icon: "Droplets", current: waterDone, target: 1, xp: 10, done: waterDone >= 1 },
   ]
+
+  if (input.githubAccount) {
+    const githubCommitToday = input.githubActivities.filter((g) => g.date === date && g.type === "push").length
+    const githubPrOpenedToday = input.githubActivities.filter(
+      (g) => g.date === date && g.type === "pull_request" && (g.action === "opened" || g.action === "reopened")
+    ).length
+    const githubReviewToday = input.githubActivities.filter((g) => g.date === date && g.type === "review").length
+    const githubTaskDone = tasksToday.filter((t) => t.completed && (t.id === "github" || t.id === "project")).length
+
+    missions.push(
+      { id: "github-commit", label: "Make a commit", icon: "GitCommit", current: githubCommitToday, target: 1, xp: MISSION_XP.githubCommit, done: githubCommitToday >= 1 },
+      { id: "github-pr", label: "Open a pull request", icon: "GitPullRequest", current: githubPrOpenedToday, target: 1, xp: MISSION_XP.githubPr, done: githubPrOpenedToday >= 1 },
+      { id: "github-review", label: "Review a pull request", icon: "Eye", current: githubReviewToday, target: 1, xp: MISSION_XP.githubReview, done: githubReviewToday >= 1 },
+      { id: "github-task", label: "Complete a repository task", icon: "FolderGit2", current: githubTaskDone, target: 1, xp: MISSION_XP.githubTask, done: githubTaskDone >= 1 }
+    )
+  }
 
   if (tasksToday.length > 0) {
     const done = tasksToday.filter((t) => t.completed).length

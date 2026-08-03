@@ -77,4 +77,13 @@ export const BADGES = [
   { id: "interview-ready", name: "Interview Ready", description: "Complete all interview prep topics", icon: "🎯" },
   { id: "bookworm", name: "Bookworm", description: "Read 10 books", icon: "📚" },
   { id: "hydrated", name: "Stay Hydrated", description: "30 day water intake streak", icon: "💧" },
+  { id: "first-commit", name: "First Commit", description: "Make your first commit", icon: "🚀" },
+  { id: "commits-10", name: "Committer", description: "Make 10 commits", icon: "🔟" },
+  { id: "commits-100", name: "Century Committer", description: "Make 100 commits", icon: "🎖️" },
+  { id: "commits-500", name: "Legend", description: "Make 500 commits", icon: "🏆" },
+  { id: "open-source-contributor", name: "Open Source Contributor", description: "25 contributions to open source repositories", icon: "🌍" },
+  { id: "repository-creator", name: "Repository Creator", description: "Create a repository", icon: "🆕" },
+  { id: "stars-100", name: "Star Collector", description: "Earn 100 stars across your repositories", icon: "⭐" },
+  { id: "pr-master", name: "Pull Request Master", description: "Open 25 pull requests", icon: "🔀" },
+  { id: "code-reviewer", name: "Code Reviewer", description: "Review 10 pull requests", icon: "👁️" },
 ] as const

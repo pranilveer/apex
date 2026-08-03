@@ -115,6 +115,11 @@ export interface GitHubActivity {
   url: string
   date: string // YYYY-MM-DD (derived from createdAt)
   createdAt: string
+  action?: string
+  merged?: boolean
+  refType?: string
+  commitCount?: number
+  repoFull?: string
 }
 
 export interface GitHubRepoInfo {
@@ -150,6 +155,8 @@ export interface GitHubAccount {
   contributionCalendar?: { date: string; count: number }[]
   topRepositories?: GitHubRepoInfo[]
   repoList?: GitHubRepoInfo[]
+  totalCommits?: number
+  openPrs?: number
   syncedEventIds?: string[]
 }
 

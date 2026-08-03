@@ -7,6 +7,8 @@ import {
   fetchGitHubRepos,
   fetchGitHubUser,
   fetchContributionCalendar as fetchCalendarFromGitHub,
+  fetchGitHubCommitCount,
+  fetchGitHubOpenPrs,
 } from "@/lib/github"
 import type { GitHubAccount, GitHubActivity } from "@/types"
 import type { GitHubRepository } from "@/lib/github"
@@ -92,15 +94,22 @@ export async function syncGitHubActivities(): Promise<SyncResult> {
         url: ev.url,
         date,
         createdAt: ev.createdAt,
+        action: ev.action,
+        merged: ev.merged,
+        refType: ev.refType,
+        commitCount: ev.commitCount,
+        repoFull: ev.repoFull,
         userId,
       })
       added++
     }
 
-    const [profile, repos, calendar] = await Promise.all([
+    const [profile, repos, calendar, totalCommits, openPrs] = await Promise.all([
       fetchGitHubUser(username),
       fetchGitHubRepos(username),
       fetchCalendarFromGitHub(username),
+      fetchGitHubCommitCount(username),
+      fetchGitHubOpenPrs(username),
     ])
     const stars = repos.reduce((s, r) => s + r.stars, 0)
     const forks = repos.reduce((s, r) => s + r.forks, 0)
@@ -127,6 +136,8 @@ export async function syncGitHubActivities(): Promise<SyncResult> {
           longestStreak: calendar.longestStreak,
           totalContributions: calendar.totalContributions,
           contributionCalendar: calendar.days,
+          totalCommits,
+          openPrs,
           syncedEventIds: candidates.map((c) => c.eventId),
           updatedAt: new Date().toISOString(),
         },

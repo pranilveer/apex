@@ -31,7 +31,17 @@ export interface GitHubSyncEvent {
   title: string
   url: string
   createdAt: string
+  action?: string
+  merged?: boolean
+  refType?: string
+  commitCount?: number
+  repoFull?: string
 }
+
+export const GITHUB_INACTIVE_DAYS = 7
+export const GITHUB_MILESTONES = [100, 500, 1000] as const
+export const GITHUB_STREAK_WARNING_HOUR = 18
+export const CODING_MINUTES_PER_COMMIT = 30
 
 export interface GitHubCalendarDay {
   date: string
@@ -45,12 +55,16 @@ export interface GitHubContributionCalendar {
   totalContributions: number
 }
 
-async function apiGet(path: string): Promise<unknown> {
+async function apiGet(path: string, extraHeaders?: Record<string, string>): Promise<unknown> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
   try {
     const res = await fetch(`${GITHUB_API}${path}`, {
-      headers: { Accept: "application/vnd.github+json", "User-Agent": GITHUB_USER_AGENT },
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": GITHUB_USER_AGENT,
+        ...extraHeaders,
+      },
       signal: controller.signal,
       cache: "no-store",
     })
@@ -126,10 +140,34 @@ export async function fetchGitHubRepos(username: string, maxPages = 1): Promise<
   return repos
 }
 
+export async function fetchGitHubCommitCount(username: string): Promise<number> {
+  try {
+    const data = (await apiGet(
+      `/search/commits?q=author:${encodeURIComponent(username)}&per_page=1`,
+      { Accept: "application/vnd.github+json, application/vnd.github.cloak-preview" }
+    )) as { total_count?: number }
+    return Number(data.total_count ?? 0)
+  } catch {
+    return 0
+  }
+}
+
+export async function fetchGitHubOpenPrs(username: string): Promise<number> {
+  try {
+    const data = (await apiGet(
+      `/search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:open&per_page=1`
+    )) as { total_count?: number }
+    return Number(data.total_count ?? 0)
+  } catch {
+    return 0
+  }
+}
+
 const EVENT_TYPES: Record<string, string> = {
   PushEvent: "push",
   CreateEvent: "create",
   PullRequestEvent: "pull_request",
+  PullRequestReviewEvent: "review",
   IssuesEvent: "issue",
   ReleaseEvent: "release",
   ForkEvent: "fork",
@@ -143,15 +181,25 @@ export async function fetchGitHubEvents(username: string, limit = 100): Promise<
     type?: string
     created_at?: string
     repo?: { name?: string }
-    payload?: { ref_type?: string; ref?: string; commits?: { message?: string; sha?: string }[]; action?: string; pull_request?: { html_url?: string }; issue?: { html_url?: string }; release?: { html_url?: string } }
+    payload?: {
+      ref_type?: string
+      ref?: string
+      commits?: { message?: string; sha?: string }[]
+      action?: string
+      pull_request?: { html_url?: string; merged?: boolean }
+      issue?: { html_url?: string; state?: string }
+      release?: { html_url?: string }
+    }
   }[]
   if (!Array.isArray(data)) return []
 
   const events: GitHubSyncEvent[] = []
   for (const e of data) {
     if (!e.id) continue
-    const repoName = (e.repo?.name ?? "").split("/").pop() ?? e.repo?.name ?? "github"
+    const repoFull = e.repo?.name ?? ""
+    const repoName = repoFull.split("/").pop() ?? (repoFull || "github")
     const type = EVENT_TYPES[e.type ?? ""] ?? "activity"
+    const action = e.payload?.action
     const sha = e.payload?.commits?.[0]?.sha
     const commitMessage = e.payload?.commits?.[0]?.message?.split("\n")[0]
 
@@ -160,27 +208,31 @@ export async function fetchGitHubEvents(username: string, limit = 100): Promise<
     switch (type) {
       case "push":
         title = commitMessage || `Pushed to ${e.payload?.ref ?? "repository"}`
-        url = sha ? `https://github.com/${e.repo?.name}/commit/${sha}` : `https://github.com/${e.repo?.name}`
+        url = sha ? `https://github.com/${repoFull}/commit/${sha}` : `https://github.com/${repoFull}`
         break
       case "create":
         title = `Created ${e.payload?.ref_type ?? ""} ${e.payload?.ref ?? ""}`.trim()
-        url = `https://github.com/${e.repo?.name}`
+        url = `https://github.com/${repoFull}`
         break
       case "pull_request":
-        title = e.payload?.pull_request?.html_url ? `Pull request ${e.payload?.action ?? ""}`.trim() : "Pull request activity"
-        url = e.payload?.pull_request?.html_url ?? `https://github.com/${e.repo?.name}`
+        title = e.payload?.pull_request?.html_url ? `Pull request ${action ?? ""}`.trim() : "Pull request activity"
+        url = e.payload?.pull_request?.html_url ?? `https://github.com/${repoFull}`
+        break
+      case "review":
+        title = action ? `Reviewed a pull request (${action})` : "Reviewed a pull request"
+        url = `https://github.com/${repoFull}`
         break
       case "issue":
-        title = e.payload?.issue?.html_url ? `Issue ${e.payload?.action ?? ""}`.trim() : "Issue activity"
-        url = e.payload?.issue?.html_url ?? `https://github.com/${e.repo?.name}`
+        title = e.payload?.issue?.html_url ? `Issue ${action ?? ""}`.trim() : "Issue activity"
+        url = e.payload?.issue?.html_url ?? `https://github.com/${repoFull}`
         break
       case "release":
         title = "Published a release"
-        url = e.payload?.release?.html_url ?? `https://github.com/${e.repo?.name}`
+        url = e.payload?.release?.html_url ?? `https://github.com/${repoFull}`
         break
       default:
         title = `${type} in ${repoName}`
-        url = `https://github.com/${e.repo?.name}`
+        url = `https://github.com/${repoFull}`
     }
 
     events.push({
@@ -190,6 +242,11 @@ export async function fetchGitHubEvents(username: string, limit = 100): Promise<
       title,
       url,
       createdAt: e.created_at ?? new Date().toISOString(),
+      action,
+      merged: type === "pull_request" ? e.payload?.pull_request?.merged ?? false : undefined,
+      refType: type === "create" ? e.payload?.ref_type : undefined,
+      commitCount: type === "push" ? e.payload?.commits?.length ?? 1 : undefined,
+      repoFull,
     })
     if (events.length >= limit) break
   }

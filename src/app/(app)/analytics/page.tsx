@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { BarChart3, TrendingUp, Clock, Brain, Code2, Dumbbell, Flame, Calendar } from "lucide-react"
+import { Clock, Brain, Code2, Dumbbell, Flame, GitCommit, FolderGit2, Star } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,6 +13,8 @@ const COLORS: Record<string, string> = {
   Reading: "#f97316", Journal: "#ec4899", Project: "#06b6d4",
 }
 
+const GITHUB_LANG_COLORS = ["#8b5cf6", "#f59e0b", "#22c55e", "#06b6d4", "#ec4899", "#3b82f6", "#eab308", "#ef4444"]
+
 const defaultData: AnalyticsData = {
   weeklyData: [],
   monthlyData: [],
@@ -20,6 +22,17 @@ const defaultData: AnalyticsData = {
   heatmapData: [],
   productivityData: [],
   pieData: [],
+  githubData: {
+    commits: 0,
+    repos: 0,
+    stars: 0,
+    forks: 0,
+    codingHours: 0,
+    weeklyContributions: [],
+    contributionTrend: [],
+    languageData: [],
+    repoGrowth: [],
+  },
 }
 
 const getHeatColor = (count: number) => {
@@ -83,6 +96,7 @@ export default function AnalyticsPage() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="w-full flex-wrap h-auto min-h-10 gap-1">
           <TabsTrigger value="overview" className="flex-1 sm:flex-none text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="github" className="flex-1 sm:flex-none text-xs sm:text-sm">GitHub</TabsTrigger>
           <TabsTrigger value="heatmap" className="flex-1 sm:flex-none text-xs sm:text-sm">Heatmap</TabsTrigger>
           <TabsTrigger value="skills" className="flex-1 sm:flex-none text-xs sm:text-sm">Skills</TabsTrigger>
           <TabsTrigger value="streaks" className="flex-1 sm:flex-none text-xs sm:text-sm">Streaks</TabsTrigger>
@@ -163,6 +177,121 @@ export default function AnalyticsPage() {
                     <Line type="monotone" dataKey="coding" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: "#8b5cf6" }} />
                   </LineChart>
                 </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="github" className="space-y-4">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            {[
+              { label: "Commits", value: data.githubData.commits.toLocaleString(), icon: GitCommit, color: "text-green-400", bg: "bg-green-400/10" },
+              { label: "Repositories", value: data.githubData.repos.toLocaleString(), icon: FolderGit2, color: "text-blue-400", bg: "bg-blue-400/10" },
+              { label: "Stars", value: data.githubData.stars.toLocaleString(), icon: Star, color: "text-yellow-400", bg: "bg-yellow-400/10" },
+              { label: "Coding Hrs (est.)", value: `${data.githubData.codingHours.toLocaleString()}h`, icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
+            ].map((stat, i) => (
+              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                <Card className="glass-hover h-full">
+                  <CardContent className="p-4 flex items-center gap-3 h-full">
+                    <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+                      <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{loaded ? stat.value : "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Weekly Contributions</CardTitle></CardHeader>
+              <CardContent>
+                {data.githubData.weeklyContributions.length ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={data.githubData.weeklyContributions}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                      <XAxis dataKey="day" stroke="#71717a" fontSize={12} />
+                      <YAxis stroke="#71717a" fontSize={12} allowDecimals={false} />
+                      <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
+                      <Bar dataKey="count" name="Contributions" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-12 text-center">Connect your GitHub account to see weekly contributions.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Contribution Trend (30d)</CardTitle></CardHeader>
+              <CardContent>
+                {data.githubData.contributionTrend.length ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <AreaChart data={data.githubData.contributionTrend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                      <XAxis dataKey="date" stroke="#71717a" fontSize={11} minTickGap={24} tickFormatter={(d: string) => d.slice(5)} />
+                      <YAxis stroke="#71717a" fontSize={12} allowDecimals={false} />
+                      <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
+                      <Area type="monotone" dataKey="count" name="Contributions" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-12 text-center">Connect your GitHub account to see the contribution trend.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Language Distribution</CardTitle></CardHeader>
+              <CardContent>
+                {data.githubData.languageData.length ? (
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie data={data.githubData.languageData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2} stroke="none">
+                          {data.githubData.languageData.map((entry, i) => (
+                            <Cell key={entry.name} fill={GITHUB_LANG_COLORS[i % GITHUB_LANG_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-col gap-1.5 w-full sm:w-44">
+                      {data.githubData.languageData.map((entry, i) => (
+                        <div key={entry.name} className="flex items-center gap-2 text-xs">
+                          <span className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: GITHUB_LANG_COLORS[i % GITHUB_LANG_COLORS.length] }} />
+                          <span className="truncate">{entry.name}</span>
+                          <span className="ml-auto text-muted-foreground">{entry.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-12 text-center">No language data yet.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Repository Growth</CardTitle></CardHeader>
+              <CardContent>
+                {data.githubData.repoGrowth.length ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={data.githubData.repoGrowth}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                      <XAxis dataKey="month" stroke="#71717a" fontSize={11} tickFormatter={(m: string) => m.slice(2).replace("-", "/")} />
+                      <YAxis stroke="#71717a" fontSize={12} allowDecimals={false} />
+                      <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
+                      <Line type="monotone" dataKey="created" name="Repos" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6", r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-12 text-center">No repository growth data yet.</p>
+                )}
               </CardContent>
             </Card>
           </div>

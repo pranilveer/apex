@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import {
   Github, GitCommit, GitFork, GitPullRequest, Flame,
-  Tag, MessageCircle, Plus, ExternalLink, ChevronLeft, ChevronRight, type LucideIcon,
+  Tag, MessageCircle, Plus, Eye, ExternalLink, ChevronLeft, ChevronRight, type LucideIcon,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +23,7 @@ const ACTIVITY_ICONS: Record<string, { Icon: LucideIcon; className: string }> = 
   release: { Icon: Tag, className: "text-blue-400 bg-blue-400/10" },
   fork: { Icon: GitFork, className: "text-yellow-400 bg-yellow-400/10" },
   create: { Icon: Plus, className: "text-cyan-400 bg-cyan-400/10" },
+  review: { Icon: Eye, className: "text-indigo-400 bg-indigo-400/10" },
 }
 const FALLBACK_ICON: { Icon: LucideIcon; className: string } = {
   Icon: Github,

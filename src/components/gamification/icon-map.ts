@@ -9,6 +9,10 @@ import {
   BookOpen,
   Dumbbell,
   Droplets,
+  GitCommit,
+  GitPullRequest,
+  Eye,
+  FolderGit2,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -30,6 +34,10 @@ export const MISSION_ICONS: Record<string, LucideIcon> = {
   journal: PenLine,
   water: Droplets,
   tasks: ListChecks,
+  "github-commit": GitCommit,
+  "github-pr": GitPullRequest,
+  "github-review": Eye,
+  "github-task": FolderGit2,
 }
 
 export const SOURCE_COLORS: Record<string, string> = {
