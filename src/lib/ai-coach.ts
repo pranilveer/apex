@@ -51,7 +51,7 @@ interface GoalDoc { title?: string; category?: string; priority?: string; target
 interface HabitDoc { date?: string; habits?: Record<string, boolean> }
 interface LeetCodeDoc { name?: string; difficulty?: string; topic?: string; solvedDate?: string; needsRevision?: boolean }
 interface JournalDoc { date?: string; wins?: string; mistakes?: string; tomorrowPlan?: string; eveningReflection?: string; morningGoals?: string; mood?: string; energy?: number }
-interface GitHubDoc { date?: string; commitCount?: number; hoursSpent?: number; repository?: string; featureBuilt?: string }
+interface GitHubDoc { date?: string; type?: string; repository?: string; title?: string; url?: string }
 interface ProjectDoc { name?: string; status?: string; description?: string; tasks?: { status?: string }[]; updatedAt?: string }
 interface JobDoc { role?: string; company?: string; status?: string; appliedDate?: string; archived?: boolean }
 interface InterviewTopicDoc { label?: string; progress?: number; createdAt?: string }
@@ -122,12 +122,11 @@ export async function buildContext(userId: string): Promise<string> {
   }
 
   if (github.length) {
-    const totalCommits = github.reduce((s, g) => s + (g.commitCount ?? 0), 0)
-    const totalHours = github.reduce((s, g) => s + (g.hoursSpent ?? 0), 0)
+    const totalActivities = github.length
     lines.push(
       "## GitHub",
-      `- Days tracked: ${github.length}, total commits: ${totalCommits}, hours: ${totalHours}`,
-      `- Recent: ${github.slice(0, 8).map((g) => `${g.date}: ${g.commitCount}c in ${g.repository ?? "?"}${g.featureBuilt ? ` (${g.featureBuilt})` : ""}`).join("; ")}`
+      `- Activities tracked: ${totalActivities}`,
+      `- Recent: ${github.slice(0, 8).map((g) => `${g.date}: ${g.title ?? g.type ?? "activity"} in ${g.repository ?? "?"}`).join("; ")}`
     )
   }
 

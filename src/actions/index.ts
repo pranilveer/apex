@@ -363,16 +363,6 @@ export async function fetchGitHubActivities() {
   return items
 }
 
-export async function addGitHubActivity(data: import("@/types").GitHubActivity) {
-  const rest = { ...data } as unknown as Record<string, unknown>
-  delete rest.id
-  return insertOne("github_activities", rest)
-}
-
-export async function deleteGitHubActivity(id: string) {
-  await deleteOne("github_activities", id)
-}
-
 export async function fetchProjects() {
   const items = await findMany<import("@/types").Project>("projects")
   return items

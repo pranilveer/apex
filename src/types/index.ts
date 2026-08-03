@@ -108,11 +108,34 @@ export interface LeetCodeQuestion {
 
 export interface GitHubActivity {
   id: string
-  date: string
+  eventId?: string
+  type: string
   repository: string
-  commitCount: number
-  featureBuilt: string
-  hoursSpent: number
+  title: string
+  url: string
+  date: string // YYYY-MM-DD (derived from createdAt)
+  createdAt: string
+}
+
+export interface GitHubAccount {
+  id: string
+  username: string
+  connectedAt?: string
+  lastSyncAt?: string
+  lastError?: string
+  avatarUrl?: string
+  profileUrl?: string
+  displayName?: string
+  followers?: number
+  following?: number
+  repositories?: number
+  stars?: number
+  currentStreak?: number
+  longestStreak?: number
+  totalContributions?: number
+  contributionCalendar?: { date: string; count: number }[]
+  topRepositories?: { name: string; stars: number; url: string }[]
+  syncedEventIds?: string[]
 }
 
 export interface Project {

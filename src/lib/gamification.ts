@@ -220,7 +220,7 @@ export function buildActivityEvents(input: GamificationInput): ActivityEvent[] {
   }
 
   for (const g of input.githubActivities) {
-    events.push({ id: `${g.id}-github`, date: g.date, type: "github", label: `GitHub commit in ${g.repository}`, xp: ACTIVITY_XP.githubActivity })
+    events.push({ id: `${g.id}-github`, date: g.date, type: "github", label: `${g.title} in ${g.repository}`, xp: ACTIVITY_XP.githubActivity })
   }
 
   for (const j of input.journalEntries) {
@@ -318,10 +318,7 @@ export function calculateBadgeProgress(
   }
 
   const cutoff = addDays(date, -29)
-  let githubContribs = 0
-  for (const g of input.githubActivities) {
-    if (g.date >= cutoff) githubContribs += g.commitCount || 0
-  }
+  const githubContribs = input.githubActivities.filter((g) => g.date >= cutoff).length
 
   const totalTopics = input.interviewTopics.length
   const masteredTopics = input.interviewTopics.filter((t) => (t.progress ?? 0) >= 100).length
