@@ -3,10 +3,11 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import {
   Github, GitCommit, GitFork, GitPullRequest, Star, Flame, TrendingUp,
-  Tag, MessageCircle, Plus, ExternalLink, Loader2, type LucideIcon,
+  Tag, MessageCircle, Plus, ExternalLink, Loader2, ChevronLeft, ChevronRight, type LucideIcon,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { fetchGitHubActivities } from "@/actions"
 import {
   getGitHubAccount,
@@ -36,6 +37,8 @@ const FALLBACK_ICON: { Icon: LucideIcon; className: string } = {
   className: "text-muted-foreground bg-secondary",
 }
 
+const PAGE_SIZE = 8
+
 const getHeatColor = (count: number) => {
   if (count === 0) return "bg-secondary"
   if (count < 3) return "bg-green-400/20"
@@ -49,6 +52,7 @@ export default function GitHubPage() {
   const [account, setAccount] = useState<GitHubAccount | null>(null)
   const [calendar, setCalendar] = useState<CalendarData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
 
   const refreshAll = useCallback(async () => {
     const [acc, cal, acts] = await Promise.all([
@@ -59,6 +63,7 @@ export default function GitHubPage() {
     setAccount(acc)
     setCalendar(cal)
     setActivities(acts)
+    setPage(1)
     setLoading(false)
   }, [])
 
@@ -93,6 +98,10 @@ export default function GitHubPage() {
   const uniqueRepos = new Set(activities.map((a) => a.repository)).size
   const totalStars = account?.stars ?? 0
 
+  const totalPages = Math.max(1, Math.ceil(activities.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pageActivities = activities.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
   const { heatCells, leadingBlanks } = useMemo(() => {
     if (!calendar?.days.length) return { heatCells: [], leadingBlanks: 0 }
     const today = new Date()
@@ -125,9 +134,9 @@ export default function GitHubPage() {
         </div>
       ) : account ? (
         <>
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            <Card className="glass-hover">
-              <CardContent className="p-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
+            <Card className="glass-hover p-4 sm:p-6">
+              <CardContent>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
                     <GitCommit className="h-5 w-5 text-purple-400" />
@@ -139,8 +148,8 @@ export default function GitHubPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="glass-hover">
-              <CardContent className="p-4">
+            <Card className="glass-hover p-4 sm:p-6">
+              <CardContent>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-green-400/10 flex items-center justify-center">
                     <TrendingUp className="h-5 w-5 text-green-400" />
@@ -152,8 +161,8 @@ export default function GitHubPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="glass-hover">
-              <CardContent className="p-4">
+            <Card className="glass-hover p-4 sm:p-6">
+              <CardContent>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-blue-400/10 flex items-center justify-center">
                     <Github className="h-5 w-5 text-blue-400" />
@@ -165,8 +174,8 @@ export default function GitHubPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="glass-hover">
-              <CardContent className="p-4">
+            <Card className="glass-hover p-4 sm:p-6">
+              <CardContent>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-yellow-400/10 flex items-center justify-center">
                     <Star className="h-5 w-5 text-yellow-400" />
@@ -180,8 +189,8 @@ export default function GitHubPage() {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
+          <Card className="p-4 sm:p-6">
+            <CardHeader className="mb-2">
               <CardTitle className="text-base">Contribution Graph</CardTitle>
             </CardHeader>
             <CardContent>
@@ -221,53 +230,85 @@ export default function GitHubPage() {
           <div>
             <h3 className="text-lg font-semibold mb-3">Recent Activity</h3>
             {activities.length ? (
-              <div className="space-y-2">
-                {activities.map((a, i) => {
-                  const { Icon, className } = ACTIVITY_ICONS[a.type] ?? FALLBACK_ICON
-                  return (
-                    <motion.div
-                      key={a.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: Math.min(i * 0.05, 1) }}
-                    >
-                      <Card className="glass-hover">
-                        <CardContent className="p-4 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${className}`}>
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium truncate">{a.title}</p>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
-                                <Github className="h-3 w-3" />
-                                <span className="truncate">{a.repository}</span>
-                                <span>·</span>
-                                <span>{a.date}</span>
+              <>
+                <div className="space-y-2">
+                  {pageActivities.map((a, i) => {
+                    const { Icon, className } = ACTIVITY_ICONS[a.type] ?? FALLBACK_ICON
+                    return (
+                      <motion.div
+                        key={a.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: Math.min(i * 0.05, 1) }}
+                      >
+                        <Card className="glass-hover p-4 sm:p-6">
+                          <CardContent className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                              <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${className}`}>
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">{a.title}</p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
+                                  <Github className="h-3 w-3" />
+                                  <span className="truncate">{a.repository}</span>
+                                  <span>·</span>
+                                  <span>{a.date}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge variant="secondary" className="hidden sm:inline-flex">{a.type}</Badge>
-                            <a
-                              href={a.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                              aria-label="Open on GitHub"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  )
-                })}
-              </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge variant="secondary" className="hidden sm:inline-flex">{a.type}</Badge>
+                              <a
+                                href={a.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Open on GitHub"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between gap-3 mt-4">
+                    <p className="text-xs text-muted-foreground">
+                      {activities.length} activities · Page {safePage} of {totalPages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => setPage(Math.max(1, safePage - 1))}
+                        disabled={safePage <= 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Prev</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+                        disabled={safePage >= totalPages}
+                      >
+                        <span className="hidden sm:inline">Next</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
-              <Card>
-                <CardContent className="p-6 text-sm text-muted-foreground">
+              <Card className="p-4 sm:p-6">
+                <CardContent className="text-sm text-muted-foreground">
                   No activity yet. Click Sync now to import your recent GitHub activity.
                 </CardContent>
               </Card>
@@ -275,8 +316,8 @@ export default function GitHubPage() {
           </div>
         </>
       ) : (
-        <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">
+        <Card className="p-4 sm:p-6">
+          <CardContent className="text-sm text-muted-foreground">
             Connect your GitHub account above to start tracking your contribution activity, streak, and stats.
           </CardContent>
         </Card>
