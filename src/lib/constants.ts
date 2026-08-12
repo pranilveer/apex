@@ -2,7 +2,7 @@ export const APP_NAME = "DailyTracker"
 export const APP_DESCRIPTION = "Your all-in-one productivity tracker for cracking product companies"
 
 export const NAV_ITEMS = [
-  { title: "Dashboard", href: "/", icon: "LayoutDashboard" },
+  { title: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { title: "Goals", href: "/goals", icon: "Target" },
   { title: "LeetCode", href: "/leetcode", icon: "Code2" },
   { title: "GitHub", href: "/github", icon: "Github" },

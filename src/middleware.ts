@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/",
+    "/dashboard",
     "/goals/:path*",
     "/leetcode/:path*",
     "/github/:path*",

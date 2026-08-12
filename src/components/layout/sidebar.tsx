@@ -20,7 +20,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 }
 
 const navItems = [
-  { title: "Dashboard", href: "/", icon: "LayoutDashboard" },
+  { title: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { title: "Goals", href: "/goals", icon: "Target" },
   { title: "LeetCode", href: "/leetcode", icon: "Code2" },
   { title: "GitHub", href: "/github", icon: "Github" },
@@ -74,7 +74,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full w-[256px] flex-col">
       <div className="flex items-center justify-between px-4 py-4">
-        <Link href="/" className="flex items-center gap-2" onClick={onNavigate}>
+        <Link href="/dashboard" className="flex items-center gap-2" onClick={onNavigate}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Zap className="h-4 w-4 text-primary-foreground" />
           </div>

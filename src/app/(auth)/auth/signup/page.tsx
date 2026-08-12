@@ -65,7 +65,7 @@ export default function SignUpPage() {
         setSuccess(true)
         setTimeout(() => router.push("/auth/signin"), 2000)
       } else {
-        router.push("/")
+        router.push("/dashboard")
         router.refresh()
       }
     }
